@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" >
+  <title>CSE 135 — Andrew Lam</title>
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+  <div class="page">  
+    <header class="site-header">
+      <div class="title-block">
+        <h1>CSE 135</h1>
+        <p class="term">Winter 2026</p>
+      </div>
+      <div class="meta">
+        <p class="made-by">A simple page for CSE 135 made with ♥ by Andrew Lam</p>
+      </div>
+    </header>
+
+<main class="main-grid">
+      <article class="content">
+        <h2>Course Assignments and Apps</h2>
+        <section class="homework">
+          <h3>Homework 1</h3>
+          <ul class="links">
+            <li><a href="hw1/php.html">PHP</a></li>
+            <li><a href="hw1/node.html">Node</a></li>
+            <li><a href="hw1/analytics.html">Analytics</a></li>
+          </ul>
+        </section>
+
+        <section class="homework">
+          <h2>Homework 2</h2>
+          <p class="placeholder">TBD</p>
+        </section>
+
+        <section class="app">
+          <h2>Analytics App</h2>
+          <p class="placeholder">TBD</p>
+        </section>
+      </article>
+
+      <aside class="sidebar" aria-label="Team information">
+        <div class="team-card">
+          <h3>Team Andrew</h3>
+          <p class="team-desc">Solo project — sample team page used for graders to find homeworks quickly.</p>
+
+          <h4>Team Members</h4>
+          <ul>
+            <li><a href="members/andrewlam.html">Andrew Lam</a></li>
+          </ul>
+
+          <p class="live">Live @ <span id="live-time"></span></p>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="site-footer">
+      <small>Make sure this site validates: https://validator.w3.org/nu/</small>
+    </footer>
+  </div>
+
+  <script>
+    // show live time in sidebar
+    const el = document.getElementById('live-time');
+    function updateTime(){
+      const d = new Date();
+      // locale string is okay for human readers; validator-friendly script
+      el.textContent = d.toLocaleString();
+    }
+    updateTime();
+    // update once per minute
+    setInterval(updateTime, 60_000);
+  </script>
+</body>
+</html>
+

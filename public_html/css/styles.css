@@ -1,0 +1,120 @@
+/* styles.css - simple, light styling to match the screenshot layout */
+:root{
+  --max-width: 1000px;
+  --sidebar-width: 300px;
+  --muted: #efefef;
+  --accent: #f1f1f3;
+  --text: #111;
+  --card-bg: #f6f6f6;
+  --border: #ddd;
+  font-family: "Georgia", serif;
+}
+
+html,body{
+  margin:0;
+  padding:0;
+  color:var(--text);
+  background:white;
+}
+
+.page{
+  max-width:var(--max-width);
+  margin:40px auto;
+  padding: 0 20px 60px;
+}
+
+.site-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:28px;
+}
+
+.title-block h1{
+  margin:0;
+  font-size:36px;
+}
+.title-block .term{
+  margin:4px 0 0;
+  font-weight:700;
+}
+
+.main-grid{
+  display:grid;
+  grid-template-columns: 1fr var(--sidebar-width);
+  gap:20px;
+  align-items:start;
+}
+
+.content{
+  background:transparent;
+}
+
+.homework h2, .app h2{
+  margin:0 0 8px;
+}
+.links{
+  background:var(--muted);
+  padding:10px 14px;
+  border-radius:4px;
+  list-style:disc;
+  list-style-position: inside;
+  margin: 0;  
+}
+.links li{
+  margin:4px 0;
+}
+.placeholder{
+  background:var(--muted);
+  padding:8px 12px;
+  border-radius:4px;
+}
+
+.sidebar .team-card{
+  background:#f3f3f3;
+  padding:14px;
+  border-radius:6px;
+  border:1px solid var(--border);
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:14px;
+}
+
+.site-footer{
+  text-align:center;
+  margin-top:48px;
+  color:#333;
+  font-size:14px;
+}
+
+.back{
+  display:inline-block;
+  margin-bottom:8px;
+  text-decoration:none;
+  color:inherit;
+  font-size:14px;
+}
+
+.member-page{
+  max-width:700px;
+  margin:40px auto;
+  padding:0 20px 60px;
+}
+
+.member-content .bio, .member-content .fun, .member-content .links{
+  background:var(--card-bg);
+  padding:14px;
+  border-radius:6px;
+  margin-bottom:16px;
+}
+
+button{
+  padding:8px 12px;
+  border-radius:6px;
+  border:1px solid var(--border);
+  cursor:pointer;
+  background:white;
+}
+.tip{
+  margin-top:12px;
+  font-style:italic;
+}
