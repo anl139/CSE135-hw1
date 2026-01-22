@@ -1,0 +1,58 @@
+/* Personal page specific styles */
+body {
+  font-family: "Georgia", serif;
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1rem;
+  background-color: #fafafa;
+  color: #111;
+}
+
+h1, h2 {
+  text-align: center;
+  color: #2c3e50;
+}
+
+.bio {
+  margin: 2rem 0;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.fun-fact {
+  background-color: #f1f1f3;
+  border-left: 4px solid #4caf50;
+  padding: 0.5rem 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+}
+
+.hobby-list {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.hobby {
+  background-color: #e3f2fd;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  width: 120px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.hobby:hover {
+  transform: scale(1.1);
+}
+
+.back-link {
+  display: block;
+  text-align: center;
+  margin-top: 3rem;
+  font-weight: bold;
+  text-decoration: none;
+  color: #2c3e50;
+}
