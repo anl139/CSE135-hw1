@@ -4,6 +4,8 @@
 - **Andrew Lam**
 
 ## Credentials
+  **IP address for server**
+- 167.172.120.163
 - **Grader account:**
 -  Username: `grader`
 -  Password: `anl160`
