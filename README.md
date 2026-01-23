@@ -5,12 +5,9 @@
 
 ## Credentials
 - **Grader password:** `anl160`
-- **User accounts:**
+- **User accounts:**(for both server and website)
   - Username: `andrew`  
     Password: `Anny2001`  
-  - Grader SQL access:  
-    Username: `grader`  
-    Password: `anl160`
 
 ## Website
 - [https://anl139.site/](https://anl139.site/)
