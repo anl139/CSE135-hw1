@@ -1,18 +1,60 @@
-Team:
-Andrew Lam
-Password for grader: anl160
-[anl139.site](https://anl139.site/)
-I found this guide to auto-deploy using [github webhooks](https://portent.com/blog/design-dev/github-auto-deploy-setup-guide.htm)
-but essentially i create a ssh directory for user www-data then generated a key for it and copied it into the directory. I then deployed the key onto the github repository
-and clone the repo onto the server and created a deployment script (deploy.php) in the site root with commands like git pull, git submodule update, etc. Then on github i created the webhook in the repo settings
-in which i put the [link](https://anl139.site/deploy.php) and there it works
+# Team Info & Project Setup
 
-Username/password
-andrew: Anny2001
-sql
-andrew: Anny2001
-grader: anl160
+## Team
+- **Andrew Lam**
 
-what i notice in the html is that it is only half of the bytes as the original as when i curl onto the website content length is 2510 but when i go on chrome and see that it was compressed content length was 1065 more than 1/2 of the original size
-Now for me to change the server header to "CSE 135" I first had to install a package called apache2mod-security in which i had to go to the security.conf file of apache/conf-avaiable and change the value of ServerTokens,Server Signature on and put a new
-thing called SecServerSignature an add "CSE 135" with it for it to change
+## Credentials
+- **Grader password:** `anl160`
+- **User accounts:**
+  - Username: `andrew`  
+    Password: `Anny2001`  
+  - Grader SQL access:  
+    Username: `grader`  
+    Password: `anl160`
+
+## Website
+- [https://anl139.site/](https://anl139.site/)
+
+---
+
+## Auto-Deploy Setup (Using GitHub Webhooks)
+
+I followed a guide to set up auto-deployment using GitHub webhooks:  
+[GitHub Auto-Deploy Setup Guide](https://portent.com/blog/design-dev/github-auto-deploy-setup-guide.htm)
+
+### Steps Taken
+1. Created an SSH directory for the `www-data` user.  
+2. Generated an SSH key for `www-data` and stored it in the SSH directory.  
+3. Added the public key to the GitHub repository.  
+4. Cloned the repository onto the server.  
+5. Created a deployment script (`deploy.php`) in the site root with commands like:
+   ```bash
+   git pull
+   git submodule update --init --recursive
+   ```
+6.Created a webhook in the GitHub repository settings pointing [to:](https://anl139.site/deploy.php)
+## HTML Compression
+Using curl:
+curl -I https://anl139.site/
+Content-Length: 2510 bytes (uncompressed HTML)
+Using Chrome / DevTools:
+Content-Length: 1065 bytes (gzip-compressed HTML)
+This is less than half the original size, as Chrome requests compression automatically.
+# Changing the Server Header
+
+To change the server header to **"CSE 135"**:
+
+## 1. Install mod-security for Apache
+
+```bash
+sudo apt install libapache2-mod-security2
+```
+## 2. Edit the security configuration
+```bash
+/etc/apache2/mods-available/security2.conf
+```
+## 3. Update the following values
+- ServerTokens Prod
+- ServerSignature Off
+- SecServerSignature "CSE 135"
+- Restart and we are done
