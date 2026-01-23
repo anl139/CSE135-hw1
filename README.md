@@ -4,7 +4,9 @@
 - **Andrew Lam**
 
 ## Credentials
-- **Grader password:** `anl160`
+- **Grader account:**
+-  Username: `grader`
+-  Password: `anl160`
 - **User accounts:**(for both server and website)
   - Username: `andrew`  
     Password: `Anny2001`  
