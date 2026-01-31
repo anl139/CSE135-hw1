@@ -30,7 +30,7 @@ if ($method === 'GET') {
 </head>
 <body>
 
-<h1 align="center">Request Echo</h1>
+<h1 align="center">Request Echos</h1>
 <hr>
 
 <b>Method:</b> <?= htmlspecialchars($method) ?><br/>
