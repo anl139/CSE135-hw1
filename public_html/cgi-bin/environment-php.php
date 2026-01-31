@@ -6,7 +6,7 @@ header("Content-Type: text/html");
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Environment Variables!!!</title>
+    <title>Environment Variables</title>
 </head>
 <body>
 
