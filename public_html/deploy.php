@@ -1,3 +1,4 @@
+#!/usr/bin/php-cgi
 <?php
     /**
      * GIT DEPLOYMENT SCRIPT
