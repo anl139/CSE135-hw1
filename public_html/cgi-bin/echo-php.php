@@ -1,3 +1,4 @@
+#!/usr/bin/php
 <?php
 // Disable caching
 header("Cache-Control: no-cache");
