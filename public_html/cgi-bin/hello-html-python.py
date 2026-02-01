@@ -5,7 +5,7 @@ import os, datetime, cgi, html  # use html.escape
 now = datetime.datetime.utcnow().isoformat() + 'Z'
 ip = os.environ.get('REMOTE_ADDR', 'unknown')
 form = cgi.FieldStorage()
-name = form.getfirst('name', 'Team')
+name = form.getfirst('name', 'Andrew Lam')
 message = form.getfirst('message', '')
 
 print("Content-Type: text/html; charset=utf-8")
