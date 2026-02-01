@@ -1,50 +1,42 @@
 #!/usr/bin/env python3
-import os, sys, cgi, json, datetime
+import os, sys, json, datetime
 
-# get form fields
-form = cgi.FieldStorage()
 method = os.environ.get('REQUEST_METHOD', 'GET')
 
-# support _method override when POST form was used
-if method == 'POST' and '_method' in form:
-    method = form.getfirst('_method').upper()
+# _method override for POST
+from urllib.parse import parse_qs
+if method == 'POST':
+    qs = sys.stdin.read()  # always str
+    # try to parse JSON
+    content_type = os.environ.get('CONTENT_TYPE','')
+    if 'application/json' in content_type:
+        try:
+            data = json.loads(qs)
+        except json.JSONDecodeError:
+            data = {"raw": qs}
+    else:
+        # parse as form-urlencoded
+        data = {k: v[0] for k,v in parse_qs(qs).items()}
+else:
+    # GET query string
+    data = {k: v[0] for k,v in parse_qs(os.environ.get('QUERY_STRING','')).items()}
 
-# environment info
 now = datetime.datetime.utcnow().isoformat()+'Z'
 ip = os.environ.get('REMOTE_ADDR','unknown')
 host = os.environ.get('HTTP_HOST','')
 ua = os.environ.get('HTTP_USER_AGENT','')
-content_type = os.environ.get('CONTENT_TYPE','')
 
-data = {}
-
-try:
-    if 'application/json' in content_type:
-        # read POST body safely
-        raw = sys.stdin.read()
-        try:
-            data = json.loads(raw)
-        except json.JSONDecodeError:
-            data = {'raw': raw}
-    else:
-        # parse standard form fields
-        for key in form.keys():
-            data[key] = form.getfirst(key)
-except Exception as e:
-    data = {'error': str(e)}
-
-# build response
 resp = {
-    'method': method,
-    'host': host,
-    'time': now,
-    'ip': ip,
-    'user_agent': ua,
-    'content_type': content_type,
-    'data': data
+    "method": method,
+    "host": host,
+    "time": now,
+    "ip": ip,
+    "user_agent": ua,
+    "data": data
 }
 
-# output JSON (must be str, not bytes)
+# output JSON
 print("Content-Type: application/json; charset=utf-8")
-print()  # blank line required
+print()
 print(json.dumps(resp, indent=2))
+
