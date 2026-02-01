@@ -6,6 +6,7 @@
 <style>
     body { font-family: sans-serif; margin: 2em; }
     label { display: block; margin-top: 1em; }
+    #responseContainer { margin-top: 2em; border-top: 1px solid #ccc; padding-top: 1em; }
 </style>
 </head>
 <body>
@@ -36,6 +37,9 @@
     <button type="submit">Send</button>
 </form>
 
+<!-- Container to show responses -->
+<div id="responseContainer"></div>
+
 <!-- JS logic for advanced methods and JSON -->
 <script>
 document.getElementById('echoForm').addEventListener('submit', function(e) {
@@ -45,11 +49,10 @@ document.getElementById('echoForm').addEventListener('submit', function(e) {
 
     // Only intercept POST/PUT/DELETE or JSON
     if (method === 'GET' && encoding === 'application/x-www-form-urlencoded') {
-        // Let browser handle normal GET form submit
-        return;
+        return; // let browser handle normal GET submit
     }
 
-    e.preventDefault(); // prevent default form submission
+    e.preventDefault(); // intercept JS submission
 
     // Collect form fields
     let data = {};
@@ -70,10 +73,8 @@ document.getElementById('echoForm').addEventListener('submit', function(e) {
     fetch(url, options)
         .then(r => r.text())
         .then(html => {
-            // Replace current page with response
-            document.open();
-            document.write(html);
-            document.close();
+            // Show response inside the response container
+            document.getElementById('responseContainer').innerHTML = html;
         })
         .catch(err => {
             alert("Error: " + err);
@@ -88,3 +89,4 @@ document.getElementById('echoForm').addEventListener('submit', function(e) {
 
 </body>
 </html>
+
