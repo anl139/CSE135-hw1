@@ -1,157 +1,104 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <title>Echo Form Demo</title>
 <style>
-  body { font-family: sans-serif; margin: 2em; }
-  label { display:block; margin-top: .8em; }
-  #responseContainer { margin-top: 1.2em; border-top:1px solid #ddd; padding-top: 1em; white-space: pre-wrap; }
-  textarea { width:100%; height:160px; }
+body { font-family: sans-serif; margin: 2em; }
+label { display: block; margin-top: 1em; }
+button { margin-top: 1em; }
+#responseContainer { margin-top: 2em; padding: 1em; border: 1px solid #ccc; background: #f9f9f9; }
 </style>
 </head>
 <body>
 
-<h1>Echo Form Demo (multi-language)</h1>
+<h1>Echo Form Demo</h1>
+<p>Submit data to different language endpoints:</p>
 
 <form id="echoForm" method="POST" action="cgi-bin/echo-php.php">
-  <!-- Language select: when JS on we map these to endpoints -->
-  <label>Language / Endpoint:
-    <select id="language" name="language">
-      <option value="php" selected>PHP (cgi-bin/echo-php.php)</option>
-      <!-- Add other languages/endpoints as you implement them -->
-      <option value="nodejs">NodeJS (placeholder)</option>
-      <option value="python">Python (placeholder)</option>
-    </select>
-  </label>
+    <label>
+        Language:
+        <select id="language" name="language">
+            <option value="cgi-bin/echo-php.php">PHP</option>
+            <option value="cgi-bin/echo-perl.pl">Perl</option>
+            <option value="cgi-bin/echo-node.js">NodeJS</option>
+        </select>
+    </label>
 
-  <label>HTTP Method:
-    <select id="method" name="_method">
-      <option value="GET">GET</option>
-      <option value="POST" selected>POST</option>
-      <option value="PUT">PUT</option>
-      <option value="DELETE">DELETE</option>
-    </select>
-  </label>
+    <label>
+        Method:
+        <select id="method" name="method">
+            <option value="GET">GET</option>
+            <option value="POST" selected>POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+        </select>
+    </label>
 
-  <label>Encoding:
-    <select id="encoding" name="encoding">
-      <option value="application/x-www-form-urlencoded" selected>x-www-form-urlencoded</option>
-      <option value="application/json">application/json</option>
-    </select>
-  </label>
+    <label>
+        Encoding:
+        <select id="encoding" name="encoding">
+            <option value="application/x-www-form-urlencoded" selected>application/x-www-form-urlencoded</option>
+            <option value="application/json">application/json</option>
+        </select>
+    </label>
 
-  <label>Field 1: <input type="text" name="field1" value="foo"></label>
-  <label>Field 2: <input type="text" name="field2" value="bar"></label>
+    <label>
+        Field 1: <input type="text" name="field1" required>
+    </label>
+    <label>
+        Field 2: <input type="text" name="field2">
+    </label>
 
-  <!-- Hidden field kept so non-JS clients send desired method as POST body -->
-  <input type="hidden" name="_method" id="hidden_method" value="POST">
-
-  <button type="submit">Send</button>
+    <button type="submit">Submit</button>
 </form>
 
-<div id="responseContainer" aria-live="polite"></div>
+<div id="responseContainer">
+    <em>Response will appear here if JavaScript is enabled.</em>
+</div>
 
+<!-- Vanilla JS to handle dynamic method/encoding and fetch -->
 <script>
-/*
- Vanilla JS only.
- Behavior:
-  - When JS enabled: switch endpoint by language selection (map below).
-  - When JS disabled: form still submits as POST to the default action (php endpoint),
-    and _method hidden field carries the requested method (GET/POST/PUT/DELETE).
-*/
+document.getElementById('echoForm').addEventListener('submit', function(e) {
+    const method = document.getElementById('method').value;
+    const encoding = document.getElementById('encoding').value;
+    const url = document.getElementById('language').value; // dynamically choose endpoint
 
-(function(){
-  const form = document.getElementById('echoForm');
-  const language = document.getElementById('language');
-  const method = document.getElementById('method');
-  const encoding = document.getElementById('encoding');
-  const hiddenMethod = document.getElementById('hidden_method');
-  const responseContainer = document.getElementById('responseContainer');
+    // Only intercept if method is not GET or encoding is JSON
+    if (method === 'GET' && encoding === 'application/x-www-form-urlencoded') return;
 
-  // Map language value -> endpoint URL (relative or absolute)
-  const endpointMap = {
-    php: 'cgi-bin/echo-php.php',
-    nodejs: 'cgi-bin/echo-nodejs',   // placeholder — replace once implemented
-    python: 'cgi-bin/echo-python'    // placeholder
-  };
-
-  // Update hidden _method for no-JS fallback
-  method.addEventListener('change', ()=> {
-    hiddenMethod.value = method.value;
-  });
-
-  // Optionally change form.action visually if language select changes so non-JS user sees default target
-  language.addEventListener('change', ()=>{
-    const lang = language.value;
-    // Keep the server-friendly default as PHP for no-JS; but show where JS will send.
-    // For JS-enabled users, we will send to endpointMap[lang].
-    // For clarity, update form.dataset.target (no effect on server when JS off).
-    form.dataset.target = endpointMap[lang] || form.action;
-  });
-
-  form.addEventListener('submit', function(e){
-    // Determine desired method and encoding
-    const desiredMethod = method.value.toUpperCase();
-    const desiredEncoding = encoding.value;
-    const lang = language.value;
-    const url = endpointMap[lang] || form.action; // endpoint chosen by language
-
-    // If GET and no special encoding, allow native browser submit (works with no-JS too)
-    if (desiredMethod === 'GET' && desiredEncoding === 'application/x-www-form-urlencoded') {
-      // Let the browser build the query string and navigate
-      // But set the form action to the selected language's endpoint so no-JS users go there as well
-      form.action = url;
-      form.method = 'GET';
-      return;
-    }
-
-    // For other cases intercept and use fetch (PUT/DELETE or JSON)
     e.preventDefault();
 
-    // Build data object from input fields
-    const data = {};
-    form.querySelectorAll('input[name]').forEach(input => {
-      // exclude hidden _method input (we'll handle method separately)
-      if (input.name && input.type !== 'hidden') data[input.name] = input.value;
+    // Collect form fields
+    let data = {};
+    this.querySelectorAll('input[name]').forEach(input => {
+        data[input.name] = input.value;
     });
 
-    // Build fetch options
-    const options = { method: desiredMethod, headers: {} };
+    let options = { method, headers: {} };
 
-    if (desiredEncoding === 'application/json') {
-      options.headers['Content-Type'] = 'application/json';
-      options.body = JSON.stringify(data);
+    if (encoding === 'application/json') {
+        options.headers['Content-Type'] = 'application/json';
+        options.body = JSON.stringify(data);
     } else {
-      // x-www-form-urlencoded
-      options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-      options.body = new URLSearchParams(data);
+        options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        options.body = new URLSearchParams(data);
     }
 
-    // Send
     fetch(url, options)
-      .then(response => {
-        // show content-type aware result where possible
-        const ct = response.headers.get('content-type') || '';
-        if (ct.indexOf('application/json') !== -1) return response.json().then(j=> JSON.stringify(j,null,2));
-        return response.text();
-      })
-      .then(body => {
-        // Put the response into the responseContainer so the form remains available
-        responseContainer.textContent = body;
-      })
-      .catch(err => {
-        responseContainer.textContent = 'Fetch error: ' + String(err);
-        console.error(err);
-      });
-  });
-})();
+        .then(r => r.text())
+        .then(html => {
+            // Display response inside container
+            document.getElementById('responseContainer').innerHTML = html;
+        })
+        .catch(err => {
+            document.getElementById('responseContainer').innerHTML = "<p style='color:red;'>Error: " + err + "</p>";
+            console.error(err);
+        });
+});
 </script>
-
-<noscript>
-<p><strong>Note:</strong> With JavaScript off the form will submit to the default PHP endpoint as a POST. The hidden field <code>_method</code> carries the requested HTTP method (GET/POST/PUT/DELETE) so the server can simulate the method if you implement a method override on the server side. Only GET and POST are natively supported by browsers without JS.</p>
-</noscript>
 
 </body>
 </html>
+
 
