@@ -6,8 +6,8 @@ $date = date("r");
 $ip = $_SERVER['REMOTE_ADDR'];
 
 $message = [
-    "title"   => "Hello, PHP!",
-    "heading" => "Hello, PHP!",
+    "title"   => "Hello, Andrew Lam!",
+    "heading" => "Hello, Andrew Lam!",
     "message" => "This page was generated with the PHP programming language",
     "time"    => $date,
     "IP"      => $ip
