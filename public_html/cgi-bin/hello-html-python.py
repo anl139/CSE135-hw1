@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # hello-html-python.py
-import os, datetime, cgi, html
+import os, datetime, cgi, html  # use html.escape
 
 now = datetime.datetime.utcnow().isoformat() + 'Z'
 ip = os.environ.get('REMOTE_ADDR', 'unknown')
