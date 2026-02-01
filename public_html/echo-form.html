@@ -1,92 +1,168 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Echo Form Demo</title>
-<style>
-body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;max-width:900px;margin:2rem auto;padding:1rem}
-label{display:block;margin-top:.6rem}
-select,input,button,textarea{font:inherit;padding:.4rem;border:1px solid #ccc;border-radius:6px}
-#responseContainer{margin-top:1rem;padding:1rem;border:1px solid #eee;background:#fafafa}
-.muted{color:#666;font-size:.9rem}
-.small{font-size:.9rem}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echo Form Demo</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+        label {
+            display: block;
+            margin-top: 0.6rem;
+        }
+        select, input, button, textarea {
+            font: inherit;
+            padding: 0.4rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        #responseContainer {
+            margin-top: 1rem;
+            padding: 1rem;
+            border: 1px solid #eee;
+            background: #fafafa;
+        }
+        .muted {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .small {
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
-<h1>Echo Form Demo — Front-End</h1>
-<form id="echoForm">
-<label for="language">Language:</label>
-<select id="language" name="language">
-<option value="en">English</option>
-<option value="es">Español</option>
-<option value="fr">Français</option>
-<option value="zh">中文</option>
-</select>
+    <h1>Echo Form Demo — Front-End</h1>
+    <p class="muted">JS-enabled form below. For no-JS, scroll to the &lt;noscript&gt; section.</p>
 
+    <!-- JS-enabled form -->
+    <form id="echoForm">
+        <label for="language">Language:</label>
+        <select id="language" name="language">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="zh">中文</option>
+        </select>
 
-<label for="method">Method:</label>
-<select id="method" name="_method">
-<option value="GET">GET</option>
-<option value="POST">POST</option>
-<option value="PUT">PUT</option>
-<option value="DELETE">DELETE</option>
-</select>
-<label for="encoding">Encoding:</label>
-<select id="encoding" name="encoding">
-<option value="application/x-www-form-urlencoded">x-www-form-urlencoded</option>
-<option value="application/json">application/json</option>
-</select>
+        <label for="method">Method:</label>
+        <select id="method" name="_method">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+        </select>
 
+        <label for="encoding">Encoding:</label>
+        <select id="encoding" name="encoding">
+            <option value="application/x-www-form-urlencoded">x-www-form-urlencoded</option>
+            <option value="application/json">application/json</option>
+        </select>
 
-<label for="field1">Field 1 (name):</label>
-<input id="field1" name="name" placeholder="Your name" value="Alice">
+        <label for="field1">Field 1 (name):</label>
+        <input id="field1" name="name" placeholder="Your name" value="Alice">
 
+        <label for="field2">Field 2 (message):</label>
+        <textarea id="field2" name="message" rows="3">Hello</textarea>
 
-<label for="field2">Field 2 (message):</label>
-<textarea id="field2" name="message" rows="3">Hello</textarea>
+        <div style="margin-top: 0.8rem;">
+            <button type="submit">Send (JS)</button>
+        </div>
+    </form>
 
+    <div id="responseContainer" aria-live="polite"></div>
 
-<div style="margin-top:.8rem">
-<button type="submit">Send (JS)</button>
-</div>
-</form>
-<div id="responseContainer" aria-live="polite"></div>
+    <script>
+        (function() {
+            const form = document.getElementById('echoForm');
+            const responseContainer = document.getElementById('responseContainer');
 
+            function escapeHtml(s) {
+                return s.replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'})[c]);
+            }
 
-<script>
-(function(){
-const form=document.getElementById('echoForm');
-const responseContainer=document.getElementById('responseContainer');
-function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);}
-function prettyPrintJSON(obj){return '<pre>'+JSON.stringify(obj,null,2)+'</pre>'}
-async function sendRequest(values){
-let url='cgi-bin/echo-php.php';
-let fetchOptions={method:values.method,headers:{'Accept':'application/json'}};
-if(values.method==='GET'){url+='?'+new URLSearchParams(values.fields).toString();}
-else{
-if(values.encoding==='application/json'){
-fetchOptions.headers['Content-Type']='application/json';
-fetchOptions.body=JSON.stringify(values.fields);
-}else{
-fetchOptions.headers['Content-Type']='application/x-www-form-urlencoded';
-fetchOptions.body=new URLSearchParams(values.fields).toString();
-}
-}
-try{const res=await fetch(url,fetchOptions);const text=await res.text();
-try{const json=JSON.parse(text);responseContainer.innerHTML=prettyPrintJSON(json);
-}catch(e){responseContainer.innerHTML='<pre>'+escapeHtml(text)+'</pre>';}}
-catch(err){responseContainer.innerHTML='<p style="color:crimson">Request failed: '+escapeHtml(err.message)+'</p>';}}
-form.addEventListener('submit',function(ev){ev.preventDefault();
-const method=document.getElementById('method').value;
-const encoding=document.getElementById('encoding').value;
-const fields={language:document.getElementById('language').value,name:document.getElementById('field1').value,message:document.getElementById('field2').value};
-responseContainer.innerHTML='<p class="small muted">Sending... (JS fetch)</p>';
-sendRequest({method,encoding,fields});});
-})();
-</script>
-<noscript>
-<p class="muted">No JS. Submit GET or POST manually to <code>cgi-bin/echo-php.php</code>. Use _method field to override POST to PUT/DELETE.</p>
-</noscript>
+            function prettyPrintJSON(obj) {
+                return '<pre>' + JSON.stringify(obj, null, 2) + '</pre>';
+            }
+
+            async function sendRequest(values) {
+                let url = 'cgi-bin/echo-php.php';
+                let fetchOptions = { method: values.method, headers: { 'Accept': 'application/json' } };
+
+                if (values.method === 'GET') {
+                    url += '?' + new URLSearchParams(values.fields).toString();
+                } else {
+                    if (values.encoding === 'application/json') {
+                        fetchOptions.headers['Content-Type'] = 'application/json';
+                        fetchOptions.body = JSON.stringify(values.fields);
+                    } else {
+                        fetchOptions.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+                        fetchOptions.body = new URLSearchParams(values.fields).toString();
+                    }
+                }
+
+                try {
+                    const res = await fetch(url, fetchOptions);
+                    const text = await res.text();
+                    try {
+                        const json = JSON.parse(text);
+                        responseContainer.innerHTML = prettyPrintJSON(json);
+                    } catch(e) {
+                        responseContainer.innerHTML = '<pre>' + escapeHtml(text) + '</pre>';
+                    }
+                } catch(err) {
+                    responseContainer.innerHTML = '<p style="color:crimson">Request failed: ' + escapeHtml(err.message) + '</p>';
+                }
+            }
+
+            form.addEventListener('submit', function(ev) {
+                ev.preventDefault();
+                const method = document.getElementById('method').value;
+                const encoding = document.getElementById('encoding').value;
+                const fields = {
+                    language: document.getElementById('language').value,
+                    name: document.getElementById('field1').value,
+                    message: document.getElementById('field2').value
+                };
+                responseContainer.innerHTML = '<p class="small muted">Sending... (JS fetch)</p>';
+                sendRequest({ method, encoding, fields });
+            });
+        })();
+    </script>
+
+    <noscript>
+        <hr>
+        <h2>No JavaScript — fallback forms</h2>
+        <p class="muted">JavaScript is disabled. Submit directly to <code>cgi-bin/echo-php.php</code>. Use <code>_method</code> to override POST for PUT/DELETE.</p>
+
+        <h3>GET form</h3>
+        <form method="get" action="cgi-bin/echo-php.php">
+            <label>language <input name="language" value="en"></label>
+            <label>name <input name="name" value="Alice"></label>
+            <label>message <input name="message" value="Hello"></label>
+            <button type="submit">Send GET</button>
+        </form>
+
+        <h3>POST form</h3>
+        <form method="post" action="cgi-bin/echo-php.php">
+            <label>_method (override to PUT/DELETE)
+                <select name="_method">
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                </select>
+            </label>
+            <label>language <input name="language" value="en"></label>
+            <label>name <input name="name" value="Alice"></label>
+            <label>message <input name="message" value="Hello"></label>
+            <button type="submit">Send POST (or overridden)</button>
+        </form>
+    </noscript>
 </body>
 </html>
+
