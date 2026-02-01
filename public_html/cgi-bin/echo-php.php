@@ -50,6 +50,11 @@ header("Content-Type: text/html; charset=utf-8");
 <head>
     <meta charset="utf-8">
     <title>Echo PHP</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        pre { background: #f0f0f0; padding: 1em; }
+        button { margin-top: 1em; padding: 0.5em 1em; }
+    </style>
 </head>
 <body>
 <h1>Echo Endpoint (PHP)</h1>
@@ -67,5 +72,12 @@ header("Content-Type: text/html; charset=utf-8");
 
 <h2>Raw Body</h2>
 <pre><?= htmlspecialchars($raw_body) ?></pre>
+
+<!-- Back to Form Button -->
+<form action="../echo-form.html" method="get">
+    <button type="submit">Back to Form</button>
+</form>
+
 </body>
 </html>
+
