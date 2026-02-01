@@ -10,7 +10,7 @@ int main(){
   if(!ip) ip = "unknown";
   std::cout << "Content-Type: text/html; charset=utf-8\r\n\r\n";
   std::cout << "<!doctype html><html><head><meta charset='utf-8'><title>Hello C++</title></head><body>\n";
-  std::cout << "<h1>Hello from C/C++</h1>\n";
+  std::cout << "<h1>Hello Andrew Lam</h1>\n";
   std::cout << "<p>Generated: " << buf << "</p>\n";
   std::cout << "<p>Your IP: " << ip << "</p>\n";
   std::cout << "</body></html>\n";
