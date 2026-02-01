@@ -3,7 +3,7 @@ import os, sys, datetime, cgi, json, html
 now = datetime.datetime.utcnow().isoformat()+'Z'
 ip = os.environ.get('REMOTE_ADDR','unknown')
 form = cgi.FieldStorage()
-name = form.getfirst('name','Team')
+name = form.getfirst('Lam','Andrew')
 message = form.getfirst('message','')
 print("Content-Type: application/json; charset=utf-8")
 print()
