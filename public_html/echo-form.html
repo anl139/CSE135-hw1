@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Echo Form Demo</title>
+    <title>Echo Language Demo</title>
+
     <style>
         body {
             font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
@@ -11,158 +12,196 @@
             margin: 2rem auto;
             padding: 1rem;
         }
+        fieldset {
+            margin-top: 1.5rem;
+            padding: 1rem;
+        }
         label {
             display: block;
-            margin-top: 0.6rem;
+            margin-top: 0.75rem;
         }
-        select, input, button, textarea {
+        select, input, textarea, button {
             font: inherit;
             padding: 0.4rem;
-            border: 1px solid #ccc;
-            border-radius: 6px;
+            margin-top: 0.25rem;
         }
-        #responseContainer {
-            margin-top: 1rem;
+        #response {
+            margin-top: 1.5rem;
             padding: 1rem;
-            border: 1px solid #eee;
+            border: 1px solid #ddd;
             background: #fafafa;
         }
         .muted {
             color: #666;
             font-size: 0.9rem;
         }
-        .small {
-            font-size: 0.9rem;
-        }
     </style>
 </head>
+
 <body>
-    <h1>Echo Form Demo — Front-End</h1>
-    <p class="muted">JS-enabled form below. For no-JS, scroll to the &lt;noscript&gt; section.</p>
 
-    <!-- JS-enabled form -->
-    <form id="echoForm">
-        <label for="language">Language:</label>
-        <select id="language" name="language">
-            <option value="en">English</option>
-            <option value="es">Español</option>
-            <option value="fr">Français</option>
-            <option value="zh">中文</option>
-        </select>
+<h1>Echo Demo — Multiple Languages</h1>
 
-        <label for="method">Method:</label>
-        <select id="method" name="_method">
-            <option value="GET">GET</option>
-            <option value="POST">POST</option>
-            <option value="PUT">PUT</option>
-            <option value="DELETE">DELETE</option>
-        </select>
+<p class="muted">
+    This page submits data to server-side echo programs written in
+    PHP, Python, or C/C++. With JavaScript enabled, one dynamic form is used.
+    With JavaScript disabled, reduced static forms are provided.
+</p>
 
-        <label for="encoding">Encoding:</label>
-        <select id="encoding" name="encoding">
-            <option value="application/x-www-form-urlencoded">x-www-form-urlencoded</option>
-            <option value="application/json">application/json</option>
-        </select>
+<!-- ========================================================= -->
+<!-- JavaScript-enabled dynamic form -->
+<!-- ========================================================= -->
 
-        <label for="field1">Field 1 (name):</label>
-        <input id="field1" name="name" placeholder="Your name" value="Alice">
+<form id="echoForm">
+    <fieldset>
+        <legend>Echo Request (JavaScript Enabled)</legend>
 
-        <label for="field2">Field 2 (message):</label>
-        <textarea id="field2" name="message" rows="3">Hello</textarea>
+        <label>
+            Language / Endpoint:
+            <select id="language">
+                <option value="php">PHP</option>
+                <option value="python">Python</option>
+                <option value="cpp">C / C++</option>
+            </select>
+        </label>
 
-        <div style="margin-top: 0.8rem;">
-            <button type="submit">Send (JS)</button>
-        </div>
-    </form>
+        <label>
+            HTTP Method:
+            <select id="method">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+            </select>
+        </label>
 
-    <div id="responseContainer" aria-live="polite"></div>
+        <label>
+            Encoding:
+            <select id="encoding">
+                <option value="application/x-www-form-urlencoded">
+                    x-www-form-urlencoded
+                </option>
+                <option value="application/json">
+                    application/json
+                </option>
+            </select>
+        </label>
 
-    <script>
-        (function() {
-            const form = document.getElementById('echoForm');
-            const responseContainer = document.getElementById('responseContainer');
+        <label>
+            Name:
+            <input type="text" id="name" value="Alice">
+        </label>
 
-            function escapeHtml(s) {
-                return s.replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'})[c]);
+        <label>
+            Message:
+            <textarea id="message" rows="3">Hello Echo</textarea>
+        </label>
+
+        <button type="submit">Send Request</button>
+    </fieldset>
+</form>
+
+<div id="response" aria-live="polite"></div>
+
+<script>
+(function () {
+    const form = document.getElementById('echoForm');
+    const responseBox = document.getElementById('response');
+
+    const endpoints = {
+        php:    'cgi-bin/echo-php.php',
+        python: 'cgi-bin/echo-python.py',
+        cpp:    'cgi-bin/echo-cpp.cgi'
+    };
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const language = document.getElementById('language').value;
+        const method   = document.getElementById('method').value;
+        const encoding = document.getElementById('encoding').value;
+
+        const data = {
+            name: document.getElementById('name').value,
+            message: document.getElementById('message').value
+        };
+
+        let url = endpoints[language];
+        let options = {
+            method: method,
+            headers: { 'Accept': 'application/json' }
+        };
+
+        if (method === 'GET') {
+            url += '?' + new URLSearchParams(data);
+        } else {
+            if (encoding === 'application/json') {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(data);
+            } else {
+                options.headers['Content-Type'] =
+                    'application/x-www-form-urlencoded';
+                options.body = new URLSearchParams(data);
             }
+        }
 
-            function prettyPrintJSON(obj) {
-                return '<pre>' + JSON.stringify(obj, null, 2) + '</pre>';
-            }
+        responseBox.textContent = 'Sending request...';
 
-            async function sendRequest(values) {
-                let url = 'cgi-bin/echo-php.php';
-                let fetchOptions = { method: values.method, headers: { 'Accept': 'application/json' } };
+        try {
+            const res = await fetch(url, options);
+            const text = await res.text();
+            responseBox.innerHTML = '<pre>' + text + '</pre>';
+        } catch (err) {
+            responseBox.textContent = 'Request failed.';
+        }
+    });
+})();
+</script>
 
-                if (values.method === 'GET') {
-                    url += '?' + new URLSearchParams(values.fields).toString();
-                } else {
-                    if (values.encoding === 'application/json') {
-                        fetchOptions.headers['Content-Type'] = 'application/json';
-                        fetchOptions.body = JSON.stringify(values.fields);
-                    } else {
-                        fetchOptions.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-                        fetchOptions.body = new URLSearchParams(values.fields).toString();
-                    }
-                }
+<!-- ========================================================= -->
+<!-- No JavaScript fallback -->
+<!-- ========================================================= -->
 
-                try {
-                    const res = await fetch(url, fetchOptions);
-                    const text = await res.text();
-                    try {
-                        const json = JSON.parse(text);
-                        responseContainer.innerHTML = prettyPrintJSON(json);
-                    } catch(e) {
-                        responseContainer.innerHTML = '<pre>' + escapeHtml(text) + '</pre>';
-                    }
-                } catch(err) {
-                    responseContainer.innerHTML = '<p style="color:crimson">Request failed: ' + escapeHtml(err.message) + '</p>';
-                }
-            }
+<noscript>
+    <hr>
 
-            form.addEventListener('submit', function(ev) {
-                ev.preventDefault();
-                const method = document.getElementById('method').value;
-                const encoding = document.getElementById('encoding').value;
-                const fields = {
-                    language: document.getElementById('language').value,
-                    name: document.getElementById('field1').value,
-                    message: document.getElementById('field2').value
-                };
-                responseContainer.innerHTML = '<p class="small muted">Sending... (JS fetch)</p>';
-                sendRequest({ method, encoding, fields });
-            });
-        })();
-    </script>
+    <h2>No JavaScript — Reduced Mode</h2>
+    <p class="muted">
+        JavaScript is disabled. Each form below performs the same echo
+        operation using a different server-side language.
+    </p>
 
-    <noscript>
-        <hr>
-        <h2>No JavaScript — fallback forms</h2>
-        <p class="muted">JavaScript is disabled. Submit directly to <code>cgi-bin/echo-php.php</code>. Use <code>_method</code> to override POST for PUT/DELETE.</p>
-
-        <h3>GET form</h3>
-        <form method="get" action="cgi-bin/echo-php.php">
-            <label>language <input name="language" value="en"></label>
-            <label>name <input name="name" value="Alice"></label>
-            <label>message <input name="message" value="Hello"></label>
-            <button type="submit">Send GET</button>
-        </form>
-
-        <h3>POST form</h3>
+    <fieldset>
+        <legend>Echo — PHP</legend>
         <form method="post" action="cgi-bin/echo-php.php">
-            <label>_method (override to PUT/DELETE)
-                <select name="_method">
-                    <option value="POST">POST</option>
-                    <option value="PUT">PUT</option>
-                    <option value="DELETE">DELETE</option>
-                </select>
-            </label>
-            <label>language <input name="language" value="en"></label>
-            <label>name <input name="name" value="Alice"></label>
-            <label>message <input name="message" value="Hello"></label>
-            <button type="submit">Send POST (or overridden)</button>
+            <input type="hidden" name="_method" value="POST">
+            <label>Name: <input name="name" value="Alice"></label>
+            <label>Message: <input name="message" value="Hello from PHP"></label>
+            <button type="submit">Send to PHP</button>
         </form>
-    </noscript>
+    </fieldset>
+
+    <fieldset>
+        <legend>Echo — Python</legend>
+        <form method="post" action="cgi-bin/echo-python.py">
+            <input type="hidden" name="_method" value="POST">
+            <label>Name: <input name="name" value="Alice"></label>
+            <label>Message: <input name="message" value="Hello from Python"></label>
+            <button type="submit">Send to Python</button>
+        </form>
+    </fieldset>
+
+    <fieldset>
+        <legend>Echo — C / C++</legend>
+        <form method="post" action="cgi-bin/echo-cpp.cgi">
+            <input type="hidden" name="_method" value="POST">
+            <label>Name: <input name="name" value="Alice"></label>
+            <label>Message: <input name="message" value="Hello from C/C++"></label>
+            <button type="submit">Send to C/C++</button>
+        </form>
+    </fieldset>
+</noscript>
+
 </body>
 </html>
 
