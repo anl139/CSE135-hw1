@@ -12,7 +12,7 @@ int main() {
 
     std::cout << "Content-Type: application/json; charset=utf-8\r\n\r\n";
     std::cout << "{\n";
-    std::cout << "  \"greeting\": \"Hello from Team Andrew\",\n";
+    std::cout << "  \"greeting\": \"Hello Andrew Lam\",\n";
     std::cout << "  \"language\": \"C/C++ (CGI)\",\n";
     std::cout << "  \"generated\": \"" << buf << "\",\n";
     std::cout << "  \"ip\": \"" << ip << "\"\n";
