@@ -3,54 +3,62 @@
 <head>
 <meta charset="utf-8">
 <title>Echo Form Demo</title>
+<style>
+    body { font-family: sans-serif; margin: 2em; }
+    label { display: block; margin-top: 1em; }
+</style>
 </head>
 <body>
-<h1>Echo Form Demo</h1>
 
-<form id="echoForm" method="POST" action="echo-php.php">
+<h1>Echo Form Demo (PHP Endpoint)</h1>
+
+<!-- FORM -->
+<form id="echoForm" method="POST" action="cgi-bin/echo-php.php">
     <label>HTTP Method:
-        <select id="method">
+        <select id="method" name="method">
             <option value="GET">GET</option>
             <option value="POST" selected>POST</option>
             <option value="PUT">PUT</option>
             <option value="DELETE">DELETE</option>
         </select>
-    </label><br><br>
+    </label>
 
     <label>Encoding:
-        <select id="encoding">
-            <option value="application/x-www-form-urlencoded">x-www-form-urlencoded</option>
+        <select id="encoding" name="encoding">
+            <option value="application/x-www-form-urlencoded" selected>x-www-form-urlencoded</option>
             <option value="application/json">application/json</option>
         </select>
-    </label><br><br>
+    </label>
 
-    <label>Field 1: <input type="text" name="field1" value="foo"></label><br>
-    <label>Field 2: <input type="text" name="field2" value="bar"></label><br><br>
+    <label>Field 1: <input type="text" name="field1" value="foo"></label>
+    <label>Field 2: <input type="text" name="field2" value="bar"></label>
 
     <button type="submit">Send</button>
 </form>
 
+<!-- JS logic for advanced methods and JSON -->
 <script>
 document.getElementById('echoForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-
     const method = document.getElementById('method').value;
     const encoding = document.getElementById('encoding').value;
-    const url = 'echo-php.php';
+    const url = 'cgi-bin/echo-php.php'; // Correct relative path
 
-    // Collect fields
-    let data = {};
-    this.querySelectorAll('input[name]').forEach(i => data[i.name] = i.value);
-
-    // GET request: append query string
-    if (method === 'GET') {
-        const params = new URLSearchParams(data).toString();
-        window.location.href = url + '?' + params;
+    // Only intercept POST/PUT/DELETE or JSON
+    if (method === 'GET' && encoding === 'application/x-www-form-urlencoded') {
+        // Let browser handle normal GET form submit
         return;
     }
 
-    // POST, PUT, DELETE
+    e.preventDefault(); // prevent default form submission
+
+    // Collect form fields
+    let data = {};
+    this.querySelectorAll('input[name]').forEach(input => {
+        data[input.name] = input.value;
+    });
+
     let options = { method, headers: {} };
+
     if (encoding === 'application/json') {
         options.headers['Content-Type'] = 'application/json';
         options.body = JSON.stringify(data);
@@ -62,16 +70,21 @@ document.getElementById('echoForm').addEventListener('submit', function(e) {
     fetch(url, options)
         .then(r => r.text())
         .then(html => {
-            const w = window.open();
-            w.document.write(html);
-            w.document.close();
+            // Replace current page with response
+            document.open();
+            document.write(html);
+            document.close();
         })
-        .catch(console.error);
+        .catch(err => {
+            alert("Error: " + err);
+            console.error(err);
+        });
 });
 </script>
 
 <noscript>
-<p>Without JavaScript, only GET and POST work via the form submit. PUT/DELETE require JS.</p>
+<p><strong>Note:</strong> Without JavaScript, only GET and POST requests with form-urlencoded encoding will work.</p>
 </noscript>
+
 </body>
 </html>
