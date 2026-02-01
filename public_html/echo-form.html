@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Echo Form Demo</title>
+</head>
+<body>
+<h1>Echo Form Demo</h1>
+
+<form id="echoForm" method="POST" action="echo-php.php">
+    <label>HTTP Method:
+        <select id="method">
+            <option value="GET">GET</option>
+            <option value="POST" selected>POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+        </select>
+    </label><br><br>
+
+    <label>Encoding:
+        <select id="encoding">
+            <option value="application/x-www-form-urlencoded">x-www-form-urlencoded</option>
+            <option value="application/json">application/json</option>
+        </select>
+    </label><br><br>
+
+    <label>Field 1: <input type="text" name="field1" value="foo"></label><br>
+    <label>Field 2: <input type="text" name="field2" value="bar"></label><br><br>
+
+    <button type="submit">Send</button>
+</form>
+
+<script>
+document.getElementById('echoForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const method = document.getElementById('method').value;
+    const encoding = document.getElementById('encoding').value;
+    const url = 'echo-php.php';
+
+    // Collect fields
+    let data = {};
+    this.querySelectorAll('input[name]').forEach(i => data[i.name] = i.value);
+
+    // GET request: append query string
+    if (method === 'GET') {
+        const params = new URLSearchParams(data).toString();
+        window.location.href = url + '?' + params;
+        return;
+    }
+
+    // POST, PUT, DELETE
+    let options = { method, headers: {} };
+    if (encoding === 'application/json') {
+        options.headers['Content-Type'] = 'application/json';
+        options.body = JSON.stringify(data);
+    } else {
+        options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        options.body = new URLSearchParams(data);
+    }
+
+    fetch(url, options)
+        .then(r => r.text())
+        .then(html => {
+            const w = window.open();
+            w.document.write(html);
+            w.document.close();
+        })
+        .catch(console.error);
+});
+</script>
+
+<noscript>
+<p>Without JavaScript, only GET and POST work via the form submit. PUT/DELETE require JS.</p>
+</noscript>
+</body>
+</html>
