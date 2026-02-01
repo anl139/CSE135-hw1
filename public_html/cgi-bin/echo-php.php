@@ -1,4 +1,4 @@
-#!/usr/bin/php
+
 <?php
 // echo-php.php
 // This script echoes back everything about the request: method, IP, headers, data
