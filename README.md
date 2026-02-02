@@ -59,3 +59,25 @@ sudo apt install libapache2-mod-security2
 - ServerSignature Off
 - SecServerSignature "CSE 135"
 - Restart and we are done
+
+### Approach 3: Free Choice — Simple Analytics
+
+For the third-party analytics free-choice approach, I evaluated several lightweight, privacy-focused options:
+
+1. **Matomo** – Self-hosted analytics with detailed tracking; setup is heavier and requires server configuration.  
+2. **Plausible Analytics** – Lightweight, privacy-first, provides simple metrics; some advanced features require a paid plan.  
+3. **Simple Analytics** – Minimal, 100% privacy-focused, free plan available, easy integration with a single script tag.
+
+**Choice:** I selected **Simple Analytics** because:
+
+- Quick and easy to integrate into existing pages.
+- It promotes the idea that unlike google analytics, it does not track personal information or fingerprint users.  
+- Minimal impact on page load speed.  
+
+**Implementation:**  
+- Added the Simple Analytics script to the `<head>` section of `index.html`:
+
+```html
+<script async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+
+
