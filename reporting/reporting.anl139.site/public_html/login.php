@@ -3,10 +3,29 @@ session_start();
 
 // Hardcoded users (username => [password hash, display name, role])
 $users = [
-    'admin' => [
-        'password_hash' => password_hash('pw', PASSWORD_DEFAULT), // password is 'pw'
-        'display_name'  => 'Administrator',
-        'role'          => 'admin'
+    'superadmin' => [
+        'password_hash' => password_hash('superpw', PASSWORD_DEFAULT),
+        'display_name' => 'Super Admin',
+        'role' => 'super_admin',
+        'allowed_sections' => [] // super admin can access all
+    ],
+    'sam' => [
+        'password_hash' => password_hash('sam123', PASSWORD_DEFAULT),
+        'display_name' => 'Analyst Sam',
+        'role' => 'analyst',
+        'allowed_sections' => ['performance'] // Sam sees only performance
+    ],
+    'sally' => [
+        'password_hash' => password_hash('sally123', PASSWORD_DEFAULT),
+        'display_name' => 'Analyst Sally',
+        'role' => 'analyst',
+        'allowed_sections' => ['performance','behavioral'] // Sally sees performance + behavioral
+    ],
+    'viewer1' => [
+        'password_hash' => password_hash('viewer123', PASSWORD_DEFAULT),
+        'display_name' => 'Viewer One',
+        'role' => 'viewer',
+        'allowed_sections' => [] // viewers can only see saved reports
     ]
 ];
 
