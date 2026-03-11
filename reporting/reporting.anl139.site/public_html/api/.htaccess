@@ -1,0 +1,11 @@
+RewriteEngine On
+
+# Route /api/logs to logs.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^logs/?(.*)$ logs.php/$1 [L,QSA]
+
+<Limit GET POST PUT DELETE>
+    Require all granted
+</Limit>
+
