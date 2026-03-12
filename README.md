@@ -1,14 +1,9 @@
 # Team Info & Project Setup
-
 ## Team
 - **Andrew Lam**
-
 ---
-
 ## Server & Credentials
-
 **Server IP:** `167.172.120.163`
-
 ### Grader Account
 - **Username:** grader  
 - **Password:** anl160
