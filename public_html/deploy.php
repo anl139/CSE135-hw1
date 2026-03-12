@@ -1,30 +1,33 @@
 <?php
-    /**
-     * GIT DEPLOYMENT SCRIPT
-     *
-     * Used for automatically deploying websites via GitHub
-     *
-     */
+/**
+ * GIT DEPLOYMENT SCRIPT
+ *
+ * Automatically deploy all folders in the repo via GitHub
+ */
 
-    // array of commands
-    $commands = array(
-        'echo $PWD',
-        'whoami',
-        'git pull',
-        'git status',
-        'git submodule sync',
-        'git submodule update',
-        'git submodule status',
-    );
+// List of folders to deploy
+$folders = ['public_html', 'collector', 'reporting', 'experiment'];
 
-    // exec commands
-    $output = '';
-    foreach($commands AS $command){
+$output = '';
+
+foreach ($folders as $folder) {
+    $commands = [
+        "echo 'Deploying $folder...'",
+        "cd $folder",
+        "git pull",
+        "git status",
+        "git submodule sync",
+        "git submodule update",
+        "git submodule status",
+        "cd .."
+    ];
+
+    foreach ($commands as $command) {
         $tmp = shell_exec($command);
-        
-        $output .= "<span style=\"color: #6BE234;\">\$</span><span style=\"color: #729FCF;\">{$command}\n</span><br />";
-        $output .= htmlentities(trim($tmp)) . "\n<br /><br />";
+        $output .= "<span style=\"color: #6BE234;\">\$</span><span style=\"color: #729FCF;\"> {$command}</span><br />";
+        $output .= htmlentities(trim($tmp)) . "<br /><br />";
     }
+}
 ?>
 
 <!DOCTYPE HTML>
@@ -33,12 +36,10 @@
     <meta charset="UTF-8">
     <title>GIT DEPLOYMENT SCRIPT</title>
 </head>
-<body style="background-color: #000000; color: #FFFFFF; font-weight: bold; padding: 0 10px;">
-<div style="width:700px">
-    <div style="float:left;width:350px;">
-    <p style="color:white;">Git Deployment Script</p>
+<body style="background-color: #000; color: #fff; font-weight: bold; padding: 10px;">
+    <h2>Git Deployment Script Output</h2>
     <?php echo $output; ?>
-    </div>
-</div>
+</body>
+</html>
 </body>
 </html>
