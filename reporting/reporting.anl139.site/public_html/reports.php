@@ -2,175 +2,263 @@
 require 'auth.php';
 require_auth();
 
-// Fetch logs from API
-$logs = json_decode(file_get_contents("https://reporting.anl139.site/api/logs"), true);
+$sections = ['performance','behavioral','reports'];
 
-// Keep only the top 50 logs
-$logs = array_slice($logs, 0, 50);
+$role = $_SESSION['user']['role'] ?? '';
+$userSections = $_SESSION['user']['allowed_sections'] ?? [];
 
-// Prepare chart data from data field
+if ($role === 'super_admin') {
+    $userSections = $sections;
+}
+
+$logs = json_decode(file_get_contents("https://reporting.anl139.site/api/logs"), true) ?? [];
+$logs = array_slice($logs,0,50);
+
 $activityCounts = [];
 $pageVisits = [];
 $navTiming = [];
+$behavioralData = [];
+$performanceData = [];
 
 foreach ($logs as $log) {
-    $data = json_decode($log['data'] ?? '{}', true);
-    $activityData = $data['activityData'] ?? $data['activitySummary'] ?? [];
-    $activityCounts[] = [
-        'clicks' => count($activityData['clicks'] ?? []),
-        'scrolls' => count($activityData['scrolls'] ?? []),
-        'mouseMoves' => count($activityData['mouseMoves'] ?? []),
-        'errors' => count($activityData['errors'] ?? [])
-    ];
-    if (isset($data['page'])) {
-        $page = $data['page'];
-    } elseif (isset($data['url'])) {
-        $page = parse_url($data['url'], PHP_URL_PATH);
-    } else {
-        $page = 'Unknown';
-    }
-    $pageVisits[$page] = ($pageVisits[$page] ?? 0) + 1;
 
-    // NavTiming if exists
+    $data = json_decode($log['data'] ?? '{}', true);
+
+    $activity = $data['activitySummary'] ?? [];
+
+    /* ---------- PERFORMANCE DATA ---------- */
+
     if (isset($data['navTiming'])) {
-        $navigationStart = $data['navTiming']['navigationStart'] ?? 0;
-        $domContent = ($data['navTiming']['domComplete'] ?? 0) - $navigationStart;
-        $loadTime = ($data['navTiming']['loadEventEnd'] ?? $data['navTiming']['totalLoadTime'] ?? 0) - $navigationStart;
+
+        $domContentLoaded = $data['navTiming']['domInteractive'] ?? null;
+        $loadTime = $data['navTiming']['totalLoadTime'] ?? null;
 
         $navTiming[] = [
-            'domContentLoaded' => max(0, $domContent),
-            'loadTime' => max(0, $loadTime)
+            'domContentLoaded' => $domContentLoaded,
+            'loadTime' => $loadTime
+        ];
+
+        $performanceData[] = [
+            'page' => $data['page'] ?? parse_url($data['url'] ?? '', PHP_URL_PATH) ?? 'Unknown',
+            'lcp' => $data['vitals']['lcp'] ?? null,
+            'cls' => $data['vitals']['cls'] ?? null,
+            'inp' => $data['vitals']['inp'] ?? null
         ];
     }
+
+    /* ---------- BEHAVIORAL DATA ---------- */
+
+    $behavioralData[] = [
+        'mouseMoves' => $activity['mouseMoves'] ?? [],
+        'clicks' => $activity['clicks'] ?? [],
+        'keys' => $activity['keys'] ?? [],
+        'idleTimes' => $activity['idleTimes'] ?? []
+    ];
+
+    /* ---------- ACTIVITY COUNTS ---------- */
+
+    $activityCounts[] = [
+        'clicks' => count($activity['clicks'] ?? []),
+        'scrolls' => count($activity['scrolls'] ?? []),
+        'mouseMoves' => count($activity['mouseMoves'] ?? []),
+        'errors' => $data['errorCount'] ?? 0
+    ];
+
+    $page = $data['page'] ?? parse_url($data['url'] ?? '', PHP_URL_PATH) ?? 'Unknown';
+
+    $pageVisits[$page] = ($pageVisits[$page] ?? 0) + 1;
 }
+
+/* ---------- ANALYST COMMENTS ---------- */
+
+$analystComments = [
+    'performance' => "Page load performance is generally under 500ms which is within RAIL guidelines. Monitoring of LCP spikes is recommended.",
+    'behavioral' => "Users primarily interact through mouse movement and occasional clicks around navigation areas.",
+    'reports' => "Saved reports summarize historical analytics data for stakeholders."
+];
+
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Reports</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        pre { white-space: pre-wrap; word-wrap: break-word; max-width: 600px; }
-        table { border-collapse: collapse; margin-bottom: 30px; }
-        th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
-    </style>
+<meta charset="UTF-8">
+<title>Reports Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body { font-family:sans-serif; padding:20px; }
+table { border-collapse:collapse; width:100%; margin-bottom:30px; }
+th,td { border:1px solid #ccc; padding:6px; }
+canvas { margin-bottom:30px; }
+.comments { background:#f6f6f6; padding:10px; border-left:4px solid #777; margin-bottom:15px; }
+</style>
+
 </head>
 <body>
-<h1>Reports</h1>
-<p><a href="/logout.php">Logout</a></p>
 
-<!-- ===== Table with Data as JSON ===== -->
+<h1>Reports Dashboard</h1>
+
+<p>
+User: <?= htmlspecialchars($_SESSION['user']['displayName']) ?>
+(<?= htmlspecialchars($role) ?>)
+|
+<a href="logout.php">Logout</a>
+</p>
+
+<?php if(in_array('performance',$userSections)): ?>
+
+<h2>Performance Reports</h2>
+
+<div class="comments">
+<?= htmlspecialchars($analystComments['performance']) ?>
+</div>
+
+<canvas id="navChart"></canvas>
+
 <table>
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Session</th>
-            <th>Type</th>
-            <th>Timestamp</th>
-            <th>Summary</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach ($logs as $index => $log):
-            $data = json_decode($log['data'] ?? '{}', true);
+<thead>
+<tr>
+<th>Page</th>
+<th>LCP</th>
+<th>CLS</th>
+<th>INP</th>
+</tr>
+</thead>
 
-            // ===== Activity Summary =====
-            $activityData = $data['activityData'] ?? $data['activitySummary'] ?? [];
-            $activitySummary = [];
-            foreach (['clicks', 'scrolls', 'mouseMoves', 'errors'] as $key) {
-                if (!empty($activityData[$key])) {
-                    // Show only first 5 items for readability
-                    $activitySummary[$key] = array_slice($activityData[$key], 0, 5);
-                    if (count($activityData[$key]) > 5) {
-                        $activitySummary[$key . '_more'] = '... ' . (count($activityData[$key]) - 5) . ' more';
-                    }
-                } else {
-                    $activitySummary[$key] = [];
-                }
-            }
-
-            // ===== NavTiming Summary =====
-            $navTimingSummary = [];
-            if (isset($data['navTiming'])) {
-                $navigationStart = $data['navTiming']['navigationStart'] ?? 0;
-                $domContent = ($data['navTiming']['domComplete'] ?? 0) - $navigationStart;
-                $loadTime = ($data['navTiming']['loadEventEnd'] ?? $data['navTiming']['totalLoadTime'] ?? 0) - $navigationStart;
-                $navTimingSummary = [
-                    'domContentLoaded' => round(max(0, $domContent), 2),
-                    'loadTime' => round(max(0, $loadTime), 2)
-                ];
-            }
-
-            // ===== Combined Summary =====
-            $summary = [
-                'page' => $data['page'] ?? $data['url'] ?? 'Unknown',
-                'activity' => $activitySummary,
-                'navTiming' => $navTimingSummary
-            ];
-        ?>
-        <tr>
-            <td><?= $index + 1 ?></td>
-            <td><?= htmlspecialchars($log['session_id'] ?? '') ?></td>
-            <td><?= htmlspecialchars($log['log_type'] ?? '') ?></td>
-            <td><?= htmlspecialchars($log['timestamp'] ?? '') ?></td>
-            <td><pre><?= json_encode($summary, JSON_PRETTY_PRINT) ?></pre></td>
-        </tr>
-        <?php endforeach; ?>
-    </tbody>
+<tbody>
+<?php foreach($performanceData as $row): ?>
+<tr>
+<td><?= htmlspecialchars($row['page']) ?></td>
+<td><?= htmlspecialchars($row['lcp'] ?? '-') ?></td>
+<td><?= htmlspecialchars($row['cls'] ?? '-') ?></td>
+<td><?= htmlspecialchars($row['inp'] ?? '-') ?></td>
+</tr>
+<?php endforeach; ?>
+</tbody>
 </table>
-<!-- ===== Activity Chart ===== -->
-<canvas id="activityChart" width="600" height="300"></canvas>
-<!-- ===== Page Visits Chart ===== -->
-<canvas id="pageVisitsChart" width="600" height="300"></canvas>
-<!-- ===== NavTiming Chart ===== -->
-<canvas id="navTimingChart" width="600" height="300"></canvas>
+
+<?php endif; ?>
+
+
+<?php if(in_array('behavioral',$userSections)): ?>
+
+<h2>Behavioral Reports</h2>
+
+<div class="comments">
+<?= htmlspecialchars($analystComments['behavioral']) ?>
+</div>
+
+<canvas id="activityChart"></canvas>
+
+<table>
+<thead>
+<tr>
+<th>Mouse X</th>
+<th>Mouse Y</th>
+<th>Timestamp</th>
+</tr>
+</thead>
+
+<tbody>
+
+<?php
+foreach($behavioralData as $b){
+foreach(array_slice($b['mouseMoves'],0,10) as $m){
+?>
+
+<tr>
+<td><?= $m['x'] ?? '-' ?></td>
+<td><?= $m['y'] ?? '-' ?></td>
+<td><?= $m['t'] ?? '-' ?></td>
+</tr>
+
+<?php }} ?>
+
+</tbody>
+</table>
+
+<?php endif; ?>
+
+
+<?php if($role === 'viewer'): ?>
+
+<h2>Saved Reports</h2>
+
+<div class="comments">
+<?= htmlspecialchars($analystComments['reports']) ?>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Session</th>
+<th>Type</th>
+<th>Timestamp</th>
+<th>Summary</th>
+</tr>
+</thead>
+
+<tbody>
+
+<?php foreach($logs as $i=>$log): ?>
+
+<tr>
+<td><?= $i+1 ?></td>
+<td><?= htmlspecialchars($log['session_id'] ?? '') ?></td>
+<td><?= htmlspecialchars($log['log_type'] ?? '') ?></td>
+<td><?= htmlspecialchars($log['timestamp'] ?? '') ?></td>
+<td><pre><?= json_encode(json_decode($log['data'] ?? '{}',true),JSON_PRETTY_PRINT) ?></pre></td>
+</tr>
+
+<?php endforeach; ?>
+
+</tbody>
+</table>
+
+<?php endif; ?>
+
 
 <script>
+
 const activityCounts = <?= json_encode($activityCounts) ?>;
-const pageVisits = <?= json_encode($pageVisits) ?>;
 const navTiming = <?= json_encode($navTiming) ?>;
 
-// ===== Activity Chart =====
-new Chart(document.getElementById('activityChart'), {
-    type: 'bar',
-    data: {
-        labels: activityCounts.map((_, i) => 'Log ' + (i + 1)),
-        datasets: [
-            { label: 'Clicks', data: activityCounts.map(a => a.clicks), backgroundColor: 'rgba(75,192,192,0.6)' },
-            { label: 'Scrolls', data: activityCounts.map(a => a.scrolls), backgroundColor: 'rgba(153,102,255,0.6)' },
-            { label: 'Mouse Moves', data: activityCounts.map(a => a.mouseMoves), backgroundColor: 'rgba(255,159,64,0.6)' },
-            { label: 'Errors', data: activityCounts.map(a => a.errors), backgroundColor: 'rgba(255,99,132,0.6)' }
-        ]
-    },
-    options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+<?php if(in_array('behavioral',$userSections)): ?>
+
+new Chart(document.getElementById('activityChart'),{
+type:'bar',
+data:{
+labels:activityCounts.map((_,i)=>'Log '+(i+1)),
+datasets:[
+{label:'Clicks',data:activityCounts.map(a=>a.clicks)},
+{label:'Scrolls',data:activityCounts.map(a=>a.scrolls)},
+{label:'MouseMoves',data:activityCounts.map(a=>a.mouseMoves)},
+{label:'Errors',data:activityCounts.map(a=>a.errors)}
+]
+}
 });
 
-// ===== Page Visits Chart =====
-new Chart(document.getElementById('pageVisitsChart'), {
-    type: 'pie',
-    data: {
-        labels: Object.keys(pageVisits),
-        datasets: [{
-            label: 'Page Visits',
-            data: Object.values(pageVisits),
-            backgroundColor: ['rgba(75,192,192,0.6)','rgba(153,102,255,0.6)','rgba(255,159,64,0.6)','rgba(255,99,132,0.6)']
-        }]
-    },
-    options: { responsive: true, plugins: { legend: { position: 'top' } } }
+<?php endif; ?>
+
+
+<?php if(in_array('performance',$userSections)): ?>
+
+new Chart(document.getElementById('navChart'),{
+type:'bar',
+data:{
+labels:navTiming.map((_,i)=>'Log '+(i+1)),
+datasets:[
+{label:'DOM Interactive',data:navTiming.map(n=>n.domContentLoaded)},
+{label:'Load Time',data:navTiming.map(n=>n.loadTime)}
+]
+}
 });
 
-// ===== NavTiming Chart =====
-new Chart(document.getElementById('navTimingChart'), {
-    type: 'bar',
-    data: {
-        labels: navTiming.map((_, i) => 'Log ' + (i + 1)),
-        datasets: [
-            { label: 'DOM Content Loaded (ms)', data: navTiming.map(n => n.domContentLoaded), backgroundColor: 'rgba(75,192,192,0.6)' },
-            { label: 'Total Load Time (ms)', data: navTiming.map(n => n.loadTime), backgroundColor: 'rgba(153,102,255,0.6)' }
-        ]
-    },
-    options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
-});
+<?php endif; ?>
+
 </script>
+
 </body>
 </html>
