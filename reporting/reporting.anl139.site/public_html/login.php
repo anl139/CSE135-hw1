@@ -1,25 +1,23 @@
 <?php
 session_start();
-
-// Hardcoded users (username => [password hash, display name, role])
 $users = [
     'superadmin' => [
         'password_hash' => password_hash('superpw', PASSWORD_DEFAULT),
         'display_name' => 'Super Admin',
         'role' => 'super_admin',
-        'allowed_sections' => [] // super admin can access all
+        'allowed_sections' => [] 
     ],
     'sam' => [
         'password_hash' => password_hash('sam123', PASSWORD_DEFAULT),
         'display_name' => 'Analyst Sam',
         'role' => 'analyst',
-        'allowed_sections' => ['performance'] // Sam sees only performance
+        'allowed_sections' => ['performance'] 
     ],
     'sally' => [
         'password_hash' => password_hash('sally123', PASSWORD_DEFAULT),
         'display_name' => 'Analyst Sally',
         'role' => 'analyst',
-        'allowed_sections' => ['performance','behavioral'] // Sally sees performance + behavioral
+        'allowed_sections' => ['performance','behavioral'] 
     ],
     'viewer1' => [
         'password_hash' => password_hash('viewer123', PASSWORD_DEFAULT),
