@@ -1,9 +1,5 @@
 <?php
-// collect.php — Analytics endpoint
-
 header('Content-Type: application/json');
-
-// CORS
 $allowed_origins = [
     'https://test.anl139.site',
     'https://www.test.anl139.site'
@@ -19,43 +15,30 @@ if (in_array($origin, $allowed_origins, true)) {
 }
 header('Access-Control-Allow-Methods: POST, OPTIONS'); 
 header('Access-Control-Allow-Headers: Content-Type');
-
-// OPTIONS preflight
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
 }
-
-// Only POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['error' => 'Method Not Allowed']);
     exit;
 }
-
-// Get POST body
 $data = file_get_contents("php://input");
 if (!$data) {
     http_response_code(400);
     echo json_encode(['error' => 'Empty body']);
     exit;
 }
-
-// Decode JSON to make sure it's valid
 $json = json_decode($data, true);
 if ($json === null) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid JSON']);
     exit;
 }
-
-// ---------------------------
-// Insert into PostgreSQL
-// ---------------------------
 $dsn = "pgsql:host=localhost;port=5432;dbname=collector_db";
 $user = "collector_andrew";
 $pass = "Anny2001";
-
 try {
     $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 
