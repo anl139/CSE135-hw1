@@ -34,18 +34,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     if (isset($users[$username]) && password_verify($password, $users[$username]['password_hash'])) {
-        // Regenerate session ID for security
         session_regenerate_id(true);
-
-        // Store user info in session
         $_SESSION['user'] = [
             'username'    => $username,
             'displayName' => $users[$username]['display_name'],
             'role'        => $users[$username]['role'],
             'allowed_sections' => $users[$username]['allowed_sections']
         ];
-
-        // Redirect to reports page
         header("Location: /reports.php");
         exit;
     } else {
