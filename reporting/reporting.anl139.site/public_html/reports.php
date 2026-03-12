@@ -164,17 +164,24 @@ User: <?= htmlspecialchars($_SESSION['user']['displayName']) ?>
 
 <?php
 foreach($behavioralData as $b){
-foreach(array_slice($b['mouseMoves'],0,10) as $m){
+    foreach(array_slice($b['mouseMoves'],0,10) as $m){
+        $x = $m['x'] ?? '-';
+        $y = $m['y'] ?? '-';
+        $t = '-';
+        if (!empty($m['t']) && is_numeric($m['t'])) {
+            // Convert milliseconds to seconds for PHP date()
+            $t = date('Y-m-d H:i:s', $m['t'] / 1000);
+        }
 ?>
-
 <tr>
-<td><?= $m['x'] ?? '-' ?></td>
-<td><?= $m['y'] ?? '-' ?></td>
-<td><?= $m['t'] ?? '-' ?></td>
+    <td><?= htmlspecialchars($x) ?></td>
+    <td><?= htmlspecialchars($y) ?></td>
+    <td><?= htmlspecialchars($t) ?></td>
 </tr>
-
-<?php }} ?>
-
+<?php 
+    } 
+} 
+?>
 </tbody>
 </table>
 
