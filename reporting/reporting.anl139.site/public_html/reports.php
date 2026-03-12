@@ -1,6 +1,8 @@
 <?php
 require 'auth.php';
 require_auth();
+require __DIR__ . '/vendor/autoload.php';
+use Dompdf\Dompdf;
 
 $sections = ['performance','behavioral','reports'];
 
@@ -21,15 +23,11 @@ $behavioralData = [];
 $performanceData = [];
 
 foreach ($logs as $log) {
-
     $data = json_decode($log['data'] ?? '{}', true);
-
     $activity = $data['activitySummary'] ?? [];
 
-    /* ---------- PERFORMANCE DATA ---------- */
-
+    // ---------- PERFORMANCE DATA ----------
     if (isset($data['navTiming'])) {
-
         $domContentLoaded = $data['navTiming']['domInteractive'] ?? null;
         $loadTime = $data['navTiming']['totalLoadTime'] ?? null;
 
@@ -46,8 +44,7 @@ foreach ($logs as $log) {
         ];
     }
 
-    /* ---------- BEHAVIORAL DATA ---------- */
-
+    // ---------- BEHAVIORAL DATA ----------
     $behavioralData[] = [
         'mouseMoves' => $activity['mouseMoves'] ?? [],
         'clicks' => $activity['clicks'] ?? [],
@@ -55,8 +52,7 @@ foreach ($logs as $log) {
         'idleTimes' => $activity['idleTimes'] ?? []
     ];
 
-    /* ---------- ACTIVITY COUNTS ---------- */
-
+    // ---------- ACTIVITY COUNTS ----------
     $activityCounts[] = [
         'clicks' => count($activity['clicks'] ?? []),
         'scrolls' => count($activity['scrolls'] ?? []),
@@ -65,40 +61,99 @@ foreach ($logs as $log) {
     ];
 
     $page = $data['page'] ?? parse_url($data['url'] ?? '', PHP_URL_PATH) ?? 'Unknown';
-
     $pageVisits[$page] = ($pageVisits[$page] ?? 0) + 1;
 }
 
 /* ---------- ANALYST COMMENTS ---------- */
-
 $analystComments = [
     'performance' => "Page load performance is generally under 500ms which is within RAIL guidelines. Monitoring of LCP spikes is recommended.",
     'behavioral' => "Users primarily interact through mouse movement and occasional clicks around navigation areas.",
     'reports' => "Saved reports summarize historical analytics data for stakeholders."
 ];
 
+/* ---------- HANDLE PDF EXPORT ---------- */
+if (isset($_GET['export'])) {
+    $exportType = $_GET['export'];
+    $html = "<h1>Reports Export</h1>";
+    $html .= "<p>Date: " . date("Y-m-d H:i:s") . "</p>";
+
+    if ($exportType === 'performance') {
+        $html .= "<h2>Performance Reports</h2><table border='1' cellpadding='5' cellspacing='0' width='100%'>";
+        $html .= "<tr><th>Page</th><th>LCP</th><th>CLS</th><th>INP</th></tr>";
+        foreach ($performanceData as $row) {
+            $html .= "<tr>
+                <td>" . htmlspecialchars($row['page']) . "</td>
+                <td>" . htmlspecialchars($row['lcp'] ?? '-') . "</td>
+                <td>" . htmlspecialchars($row['cls'] ?? '-') . "</td>
+                <td>" . htmlspecialchars($row['inp'] ?? '-') . "</td>
+            </tr>";
+        }
+        $html .= "</table>";
+    } elseif ($exportType === 'behavioral') {
+        $html .= "<h2>Behavioral Reports</h2><table border='1' cellpadding='5' cellspacing='0' width='100%'>";
+        $html .= "<tr><th>Mouse X</th><th>Mouse Y</th><th>Timestamp</th></tr>";
+        foreach ($behavioralData as $b) {
+            foreach(array_slice($b['mouseMoves'],0,10) as $m){
+                $t = (!empty($m['t']) && is_numeric($m['t'])) ? date('Y-m-d H:i:s', $m['t']/1000) : '-';
+                $html .= "<tr>
+                    <td>" . htmlspecialchars($m['x'] ?? '-') . "</td>
+                    <td>" . htmlspecialchars($m['y'] ?? '-') . "</td>
+                    <td>" . htmlspecialchars($t) . "</td>
+                </tr>";
+            }
+        }
+        $html .= "</table>";
+    } elseif ($exportType === 'viewer') {
+        $html .= "<h2>Saved Reports</h2><table border='1' cellpadding='5' cellspacing='0' width='100%'>";
+        $html .= "<tr><th>ID</th><th>Session</th><th>Type</th><th>Timestamp</th><th>Summary</th></tr>";
+        foreach ($logs as $i=>$log) {
+            $html .= "<tr>
+                <td>" . ($i+1) . "</td>
+                <td>" . htmlspecialchars($log['session_id'] ?? '') . "</td>
+                <td>" . htmlspecialchars($log['log_type'] ?? '') . "</td>
+                <td>" . htmlspecialchars($log['timestamp'] ?? '') . "</td>
+                <td><pre>" . htmlspecialchars(json_encode(json_decode($log['data'] ?? '{}'), JSON_PRETTY_PRINT)) . "</pre></td>
+            </tr>";
+        }
+        $html .= "</table>";
+    }
+
+    // Generate PDF
+    $dompdf = new Dompdf();
+    $dompdf->loadHtml($html);
+    $dompdf->setPaper('A4','portrait');
+    $dompdf->render();
+
+    // Save PDF
+    $exportDir = __DIR__ . '/exports';
+    if (!is_dir($exportDir)) mkdir($exportDir, 0775, true);
+    $fileName = $exportDir . "/report_" . $exportType . "_" . time() . ".pdf";
+    file_put_contents($fileName, $dompdf->output());
+
+    // Redirect to download
+    header("Location: exports/" . basename($fileName));
+    exit;
+}
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <title>Reports Dashboard</title>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
 body { font-family:sans-serif; padding:20px; }
 table { border-collapse:collapse; width:100%; margin-bottom:30px; }
 th,td { border:1px solid #ccc; padding:6px; }
 canvas { margin-bottom:30px; }
 .comments { background:#f6f6f6; padding:10px; border-left:4px solid #777; margin-bottom:15px; }
+button { margin-bottom:15px; }
 </style>
-
 </head>
 <body>
 
 <h1>Reports Dashboard</h1>
-
 <p>
 User: <?= htmlspecialchars($_SESSION['user']['displayName']) ?>
 (<?= htmlspecialchars($role) ?>)
@@ -107,25 +162,14 @@ User: <?= htmlspecialchars($_SESSION['user']['displayName']) ?>
 </p>
 
 <?php if(in_array('performance',$userSections)): ?>
-
 <h2>Performance Reports</h2>
-
-<div class="comments">
-<?= htmlspecialchars($analystComments['performance']) ?>
-</div>
-
+<div class="comments"><?= htmlspecialchars($analystComments['performance']) ?></div>
+<a href="?export=performance"><button>Export Performance PDF</button></a>
 <canvas id="navChart"></canvas>
-
 <table>
 <thead>
-<tr>
-<th>Page</th>
-<th>LCP</th>
-<th>CLS</th>
-<th>INP</th>
-</tr>
+<tr><th>Page</th><th>LCP</th><th>CLS</th><th>INP</th></tr>
 </thead>
-
 <tbody>
 <?php foreach($performanceData as $row): ?>
 <tr>
@@ -137,103 +181,63 @@ User: <?= htmlspecialchars($_SESSION['user']['displayName']) ?>
 <?php endforeach; ?>
 </tbody>
 </table>
-
 <?php endif; ?>
 
-
 <?php if(in_array('behavioral',$userSections)): ?>
-
 <h2>Behavioral Reports</h2>
-
-<div class="comments">
-<?= htmlspecialchars($analystComments['behavioral']) ?>
-</div>
-
+<div class="comments"><?= htmlspecialchars($analystComments['behavioral']) ?></div>
+<a href="?export=behavioral"><button>Export Behavioral PDF</button></a>
 <canvas id="activityChart"></canvas>
-
 <table>
 <thead>
-<tr>
-<th>Mouse X</th>
-<th>Mouse Y</th>
-<th>Timestamp</th>
-</tr>
+<tr><th>Mouse X</th><th>Mouse Y</th><th>Timestamp</th></tr>
 </thead>
-
 <tbody>
-
 <?php
 foreach($behavioralData as $b){
     foreach(array_slice($b['mouseMoves'],0,10) as $m){
         $x = $m['x'] ?? '-';
         $y = $m['y'] ?? '-';
         $t = '-';
-        if (!empty($m['t']) && is_numeric($m['t'])) {
-            // Convert milliseconds to seconds for PHP date()
-            $t = date('Y-m-d H:i:s', $m['t'] / 1000);
-        }
+        if (!empty($m['t']) && is_numeric($m['t'])) $t = date('Y-m-d H:i:s', $m['t']/1000);
 ?>
 <tr>
-    <td><?= htmlspecialchars($x) ?></td>
-    <td><?= htmlspecialchars($y) ?></td>
-    <td><?= htmlspecialchars($t) ?></td>
+<td><?= htmlspecialchars($x) ?></td>
+<td><?= htmlspecialchars($y) ?></td>
+<td><?= htmlspecialchars($t) ?></td>
 </tr>
-<?php 
-    } 
-} 
-?>
+<?php }} ?>
 </tbody>
 </table>
-
 <?php endif; ?>
 
-
 <?php if($role === 'viewer'): ?>
-
 <h2>Saved Reports</h2>
-
-<div class="comments">
-<?= htmlspecialchars($analystComments['reports']) ?>
-</div>
-
+<div class="comments"><?= htmlspecialchars($analystComments['reports']) ?></div>
+<a href="?export=viewer"><button>Export Saved Reports PDF</button></a>
 <table>
 <thead>
-<tr>
-<th>ID</th>
-<th>Session</th>
-<th>Type</th>
-<th>Timestamp</th>
-<th>Summary</th>
-</tr>
+<tr><th>ID</th><th>Session</th><th>Type</th><th>Timestamp</th><th>Summary</th></tr>
 </thead>
-
 <tbody>
-
 <?php foreach($logs as $i=>$log): ?>
-
 <tr>
 <td><?= $i+1 ?></td>
 <td><?= htmlspecialchars($log['session_id'] ?? '') ?></td>
 <td><?= htmlspecialchars($log['log_type'] ?? '') ?></td>
 <td><?= htmlspecialchars($log['timestamp'] ?? '') ?></td>
-<td><pre><?= json_encode(json_decode($log['data'] ?? '{}',true),JSON_PRETTY_PRINT) ?></pre></td>
+<td><pre><?= htmlspecialchars(json_encode(json_decode($log['data'] ?? '{}'), JSON_PRETTY_PRINT)) ?></pre></td>
 </tr>
-
 <?php endforeach; ?>
-
 </tbody>
 </table>
-
 <?php endif; ?>
 
-
 <script>
-
 const activityCounts = <?= json_encode($activityCounts) ?>;
 const navTiming = <?= json_encode($navTiming) ?>;
 
 <?php if(in_array('behavioral',$userSections)): ?>
-
 new Chart(document.getElementById('activityChart'),{
 type:'bar',
 data:{
@@ -246,12 +250,9 @@ datasets:[
 ]
 }
 });
-
 <?php endif; ?>
 
-
 <?php if(in_array('performance',$userSections)): ?>
-
 new Chart(document.getElementById('navChart'),{
 type:'bar',
 data:{
@@ -262,9 +263,7 @@ datasets:[
 ]
 }
 });
-
 <?php endif; ?>
-
 </script>
 
 </body>
