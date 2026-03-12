@@ -23,7 +23,7 @@ $users = [
         'password_hash' => password_hash('viewer123', PASSWORD_DEFAULT),
         'display_name' => 'Viewer One',
         'role' => 'viewer',
-        'allowed_sections' => [] // viewers can only see saved reports
+        'allowed_sections' => []
     ]
 ];
 
