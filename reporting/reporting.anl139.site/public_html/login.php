@@ -43,7 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['user'] = [
             'username'    => $username,
             'displayName' => $users[$username]['display_name'],
-            'role'        => $users[$username]['role']
+            'role'        => $users[$username]['role'],
+            'allowed_sections' => $users[$username]['allowed_sections']
         ];
 
         // Redirect to reports page
