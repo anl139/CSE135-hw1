@@ -260,13 +260,26 @@ new Chart(document.getElementById('activityChart'), {
 <?php endif; ?>
 
 // Export PDF
-function exportPDF(tabId){
+// Export PDF
+function exportPDF(tabId) {
     const el = document.getElementById(tabId);
     const hiddenTabs = document.querySelectorAll('.tab-content');
-    hiddenTabs.forEach(t => { if(t.id!==tabId) t.style.display='none'; });
-    html2pdf().set({margin:0.5, filename: tabId+'_report.pdf', html2canvas:{scale:2}}).from(el).save().then(()=>{
-        hiddenTabs.forEach(t => { if(t.id!==tabId) t.style.display='none'; });
-        document.querySelector(`.sidebar a.active`).click();
-    });
+
+    // Hide other tabs temporarily
+    hiddenTabs.forEach(t => { if(t.id !== tabId) t.style.display = 'none'; });
+
+    html2pdf()
+        .set({
+            margin: 0.5,
+            filename: tabId + '_report.pdf',
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } // <-- added for wide tables
+        })
+        .from(el)
+        .save()
+        .then(() => {
+            // Restore visibility of other tabs
+            hiddenTabs.forEach(t => { t.style.display = (document.querySelector(`.sidebar a.active`).dataset.tab === t.id) ? 'block' : 'none'; });
+        });
 }
 </script>
