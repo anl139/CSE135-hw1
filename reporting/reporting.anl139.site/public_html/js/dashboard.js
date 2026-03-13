@@ -65,52 +65,48 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+  async function loadPdfLib() {
+  if (window.html2pdf) return;
 
-  function exportPDF(tabId) {
-    const el = document.getElementById(tabId);
-    if (!el || typeof html2pdf === 'undefined') return;
+  const script = document.createElement('script');
+  script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+  script.defer = true;
 
-    const hiddenTabs = document.querySelectorAll('.tab-content');
-    const previousStates = new Map();
+  document.body.appendChild(script);
 
-    hiddenTabs.forEach(tab => {
-      previousStates.set(tab, tab.style.display);
-      if (tab.id !== tabId) {
-        tab.style.display = 'none';
-      }
-    });
+  await new Promise(resolve => {
+    script.onload = resolve;
+  });
+}
 
-    html2pdf()
-      .set({
-        margin: 0.5,
-        filename: tabId + '_report.pdf',
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-      })
-      .from(el)
-      .save()
-      .then(() => {
-        hiddenTabs.forEach(tab => {
-          tab.style.display = previousStates.get(tab) || '';
-        });
-      });
-  }
+  async function exportPDF(tabId) {
+  await loadPdfLib();
 
-  document.querySelectorAll('[data-export-pdf]').forEach(button => {
-    button.addEventListener('click', () => {
-      exportPDF(button.dataset.exportPdf);
-    });
+  const el = document.getElementById(tabId);
+  if (!el) return;
+
+  const hiddenTabs = document.querySelectorAll('.tab-content');
+  const previousStates = new Map();
+
+  hiddenTabs.forEach(tab => {
+    previousStates.set(tab, tab.style.display);
+    if (tab.id !== tabId) {
+      tab.style.display = 'none';
+    }
   });
 
-  if (sidebarLinks.length) {
-    const initial = document.querySelector('.sidebar a.active') || sidebarLinks[0];
-    if (initial) {
-      showTab(initial.dataset.tab);
-    }
-  }
-
-  initNavChart();
-  initActivityChart();
-
-  window.exportPDF = exportPDF;
-});
+  html2pdf()
+    .set({
+      margin: 0.5,
+      filename: tabId + '_report.pdf',
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+    })
+    .from(el)
+    .save()
+    .then(() => {
+      hiddenTabs.forEach(tab => {
+        tab.style.display = previousStates.get(tab) || '';
+      });
+    });
+}
