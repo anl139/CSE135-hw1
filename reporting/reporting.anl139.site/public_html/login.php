@@ -1,64 +1,58 @@
 <?php
-session_start();
-$users = [
-    'superadmin' => [
-        'password_hash' => password_hash('superpw', PASSWORD_DEFAULT),
-        'display_name' => 'Super Admin',
-        'role' => 'super_admin',
-        'allowed_sections' => [] 
-    ],
-    'sam' => [
-        'password_hash' => password_hash('sam123', PASSWORD_DEFAULT),
-        'display_name' => 'Analyst Sam',
-        'role' => 'analyst',
-        'allowed_sections' => ['performance'] 
-    ],
-    'sally' => [
-        'password_hash' => password_hash('sally123', PASSWORD_DEFAULT),
-        'display_name' => 'Analyst Sally',
-        'role' => 'analyst',
-        'allowed_sections' => ['performance','behavioral'] 
-    ],
-    'viewer1' => [
-        'password_hash' => password_hash('viewer123', PASSWORD_DEFAULT),
-        'display_name' => 'Viewer One',
-        'role' => 'viewer',
-        'allowed_sections' => []
-    ]
-];
+require 'auth.php';
+
+$users = load_users();
 $error = null;
+$username = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
 
     if (isset($users[$username]) && password_verify($password, $users[$username]['password_hash'])) {
         session_regenerate_id(true);
+
         $_SESSION['user'] = [
-            'username'    => $username,
+            'username' => $username,
             'displayName' => $users[$username]['display_name'],
-            'role'        => $users[$username]['role'],
-            'allowed_sections' => $users[$username]['allowed_sections']
+            'role' => $users[$username]['role'],
+            'allowed_sections' => $users[$username]['allowed_sections'] ?? []
         ];
+
         header("Location: /reports.php");
         exit;
-    } else {$error = "Invalid username or password";}}
+    } else {
+        $error = "Invalid username or password";
+    }
+}
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <link rel="stylesheet" href="/styles/login.css">
 </head>
 <body>
-    <h2>Login</h2>
-    <?php if ($error): ?>
-        <p style="color:red;"><?= htmlspecialchars($error) ?></p>
-    <?php endif; ?>
-    <form method="POST">
-        <label>Username</label><br>
-        <input type="text" name="username" value="<?= htmlspecialchars($username ?? '') ?>" required><br><br>
-        <label>Password</label><br>
-        <input type="password" name="password" required><br><br>
-        <button type="submit">Login</button>
-    </form>
+    <div class="login-card">
+        <h2>Login</h2>
+
+        <?php if ($error): ?>
+            <p class="error"><?= htmlspecialchars($error) ?></p>
+        <?php endif; ?>
+
+        <form method="POST">
+            <label>Username</label>
+            <input type="text" name="username" value="<?= htmlspecialchars($username) ?>" required>
+
+            <label>Password</label>
+            <input type="password" name="password" required>
+
+            <button type="submit">Login</button>
+        </form>
+
+        <p class="hint">Super admin: <strong>superadmin / superpw</strong></p>
+    </div>
 </body>
 </html>
