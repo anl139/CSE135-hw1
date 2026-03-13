@@ -81,8 +81,12 @@ $logs = array_map(function($log) {
     ];
 }, $logsRaw);
 
+$navTimingChart = array_values(array_filter(
+    array_map(fn($l) => $l['perf'], $logs),
+    fn($perf) => !empty($perf) // keep arrays even if some metrics are 0
+));
+
 $activityCountsChart = array_map(fn($l) => $l['activityCounts'], $logs);
-$navTimingChart = array_values(array_filter(array_map(fn($l) => $l['perf'], $logs)));
 
 $analystComments = [
     'overview' => "Displays the first 10 log entries in readable format.",
