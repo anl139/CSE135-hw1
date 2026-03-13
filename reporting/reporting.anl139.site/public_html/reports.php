@@ -64,7 +64,6 @@ $logs = array_map(function($log) {
 
     $activityCounts = [
         'clicks' => count($activity['clicks'] ?? []),
-        'scrolls' => count($activity['scrolls'] ?? []),
         'mouseMoves' => count($activity['mouseMoves'] ?? []),
         'errors' => $data['errorCount'] ?? 0
     ];
