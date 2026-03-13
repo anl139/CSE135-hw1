@@ -49,14 +49,11 @@ $logs = array_map(function($log) {
         $screen = ($tech['screenWidth'] ?? '-') . "x" . ($tech['screenHeight'] ?? '-');
         $techSummary = "$cores cores, $memory GB, $network, $screen";
     }
-    $pagePath = parse_url($data['url'] ?? '', PHP_URL_PATH);
-    if ($pagePath === '' || $pagePath === '/') {
-    $pagePath = '/index.html'; // normalize root URL
-    }
+
     $perf = [];
     if (isset($data['navTiming'])) {
         $perf = [
-            'page' => $pagePath,
+            'page' => $data['page'] ?? (parse_url($data['url'] ?? '', PHP_URL_PATH) ?? 'Unknown'),
             'lcp' => $vitals['lcp'] ?? null,
             'cls' => $vitals['cls'] ?? null,
             'inp' => $vitals['inp'] ?? null,
@@ -67,8 +64,8 @@ $logs = array_map(function($log) {
 
     $activityCounts = [
         'clicks' => count($activity['clicks'] ?? []),
+        'scrolls' => count($activity['scrolls'] ?? []),
         'mouseMoves' => count($activity['mouseMoves'] ?? []),
-        'keys' => count($activity['keys'] ?? []),
         'errors' => $data['errorCount'] ?? 0
     ];
 
@@ -84,12 +81,8 @@ $logs = array_map(function($log) {
     ];
 }, $logsRaw);
 
-$navTimingChart = array_values(array_filter(
-    array_map(fn($l) => $l['perf'], $logs),
-    fn($perf) => !empty($perf) // keep arrays even if some metrics are 0
-));
-
 $activityCountsChart = array_map(fn($l) => $l['activityCounts'], $logs);
+$navTimingChart = array_values(array_filter(array_map(fn($l) => $l['perf'], $logs)));
 
 $analystComments = [
     'overview' => "Displays the first 10 log entries in readable format.",
