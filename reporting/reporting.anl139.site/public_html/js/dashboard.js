@@ -58,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
         labels: activityCounts.map((_, i) => 'Log ' + (i + 1)),
         datasets: [
           { label: 'Clicks', data: activityCounts.map(a => a.clicks) },
-          { label: 'Scrolls', data: activityCounts.map(a => a.scrolls) },
           { label: 'MouseMoves', data: activityCounts.map(a => a.mouseMoves) },
           { label: 'Errors', data: activityCounts.map(a => a.errors) }
         ]
