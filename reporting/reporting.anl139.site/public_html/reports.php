@@ -98,7 +98,6 @@ $analystComments = [
 <title>Analytics Dashboard</title>
 <link rel="stylesheet" href="/styles/dashboard.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 <div class="dashboard-layout">
