@@ -89,107 +89,154 @@ $analystComments = [
     'performance' => "Page load performance is under 500ms on average. Monitor LCP spikes.",
     'behavioral' => "Users mainly interact via mouse movements and occasional clicks."
 ];
-$activityCounts = $activityCounts ?? [];
-$navTiming = $navTiming ?? [];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-
-    <link rel="stylesheet" href="/styles/styles.css">
-
-    <!-- Chart.js is required for navChart and activityChart -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- If your exportPDF function uses html2pdf, keep this dependency -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics Dashboard</title>
+<link rel="stylesheet" href="/styles/dashboard.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
+<div class="dashboard-layout">
     <header class="dashboard-header">
-        <h1>Dashboard</h1>
+        <h1>Analytics Dashboard</h1>
+        <span>User: <?= htmlspecialchars($_SESSION['user']['displayName']) ?> (<?= htmlspecialchars($role) ?>)</span>
+        <?php if ($role === 'super_admin'): ?>
+            <a class="top-link" href="/admin.php">User Admin</a>
+        <?php endif; ?>
+        <button type="button" id="logoutBtn">Logout</button>
     </header>
 
-    <nav class="dashboard-tabs" aria-label="Dashboard sections">
+    <nav class="sidebar">
         <?php if (in_array('overview', $userSections, true)): ?>
-            <button type="button" class="tab-button active" data-tab="overview">Overview</button>
+            <a href="#overview" class="active" data-tab="overview">Overview</a>
         <?php endif; ?>
-
         <?php if (in_array('performance', $userSections, true)): ?>
-            <button type="button" class="tab-button" data-tab="performance">Performance</button>
+            <a href="#performance" data-tab="performance">Performance</a>
         <?php endif; ?>
-
         <?php if (in_array('behavioral', $userSections, true)): ?>
-            <button type="button" class="tab-button" data-tab="behavioral">Behavioral</button>
+            <a href="#behavioral" data-tab="behavioral">Behavioral</a>
         <?php endif; ?>
     </nav>
 
-    <main class="dashboard-main">
+    <main class="main-content">
         <?php if (in_array('overview', $userSections, true)): ?>
-            <section id="overview" class="tab-content active">
-                <div class="tab-actions">
-                    <button type="button" data-export-pdf="overview">Export PDF</button>
-                </div>
+        <div id="overview" class="tab-content">
+            <h2>Overview</h2>
+            <button type="button" data-export-pdf="overview">Export as PDF</button>
+            <div class="comments"><?= htmlspecialchars($analystComments['overview']) ?></div>
 
-                <!-- Keep your existing Overview content here -->
-                <div class="panel">
-                    <h2>Overview</h2>
-                    <p>Your existing overview widgets, tables, and summaries go here.</p>
-                </div>
-            </section>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Session</th>
+                        <th>Type</th>
+                        <th>Timestamp</th>
+                        <th>Mouse</th>
+                        <th>Clicks</th>
+                        <th>Keys</th>
+                        <th>Errors</th>
+                        <th>Technographics</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach (array_slice($logs, 0, 10) as $i => $l): ?>
+                    <tr>
+                        <td><?= $i + 1 ?></td>
+                        <td><?= htmlspecialchars($l['raw']['session_id'] ?? '') ?></td>
+                        <td><?= htmlspecialchars($l['raw']['log_type'] ?? '') ?></td>
+                        <td><?= htmlspecialchars($l['raw']['timestamp'] ?? '') ?></td>
+                        <td><?= htmlspecialchars(implode(", ", $l['mouse'])) ?></td>
+                        <td><?= htmlspecialchars(implode(", ", $l['clicks'])) ?></td>
+                        <td><?= htmlspecialchars(implode(", ", $l['keys'])) ?></td>
+                        <td><?= htmlspecialchars((string)($l['activityCounts']['errors'] ?? 0)) ?></td>
+                        <td><?= htmlspecialchars($l['tech']) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
         <?php endif; ?>
 
         <?php if (in_array('performance', $userSections, true)): ?>
-            <section id="performance" class="tab-content">
-                <div class="tab-actions">
-                    <button type="button" data-export-pdf="performance">Export PDF</button>
-                </div>
+        <div id="performance" class="tab-content" style="display:none;">
+            <h2>Performance Reports</h2>
+            <button type="button" data-export-pdf="performance">Export as PDF</button>
+            <div class="comments"><?= htmlspecialchars($analystComments['performance']) ?></div>
+            <canvas id="navChart"></canvas>
 
-                <div class="panel">
-                    <h2>Performance</h2>
-                    <canvas id="navChart" height="120"></canvas>
-                </div>
-
-                <!-- Keep your existing Performance content here -->
-                <div class="panel">
-                    <p>Your existing performance tables and metrics go here.</p>
-                </div>
-            </section>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Page</th>
+                        <th>LCP</th>
+                        <th>CLS</th>
+                        <th>INP</th>
+                        <th>DOM Interactive</th>
+                        <th>Total Load Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($navTimingChart as $p): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($p['page'] ?? '-') ?></td>
+                        <td><?= htmlspecialchars((string)($p['lcp'] ?? '-')) ?></td>
+                        <td><?= htmlspecialchars((string)($p['cls'] ?? '-')) ?></td>
+                        <td><?= htmlspecialchars((string)($p['inp'] ?? '-')) ?></td>
+                        <td><?= htmlspecialchars((string)($p['domContentLoaded'] ?? '-')) ?></td>
+                        <td><?= htmlspecialchars((string)($p['loadTime'] ?? '-')) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
         <?php endif; ?>
 
         <?php if (in_array('behavioral', $userSections, true)): ?>
-            <section id="behavioral" class="tab-content">
-                <div class="tab-actions">
-                    <button type="button" data-export-pdf="behavioral">Export PDF</button>
-                </div>
+        <div id="behavioral" class="tab-content" style="display:none;">
+            <h2>Behavioral Reports</h2>
+            <button type="button" data-export-pdf="behavioral">Export as PDF</button>
+            <div class="comments"><?= htmlspecialchars($analystComments['behavioral']) ?></div>
+            <canvas id="activityChart"></canvas>
 
-                <div class="panel">
-                    <h2>Behavioral</h2>
-                    <canvas id="activityChart" height="120"></canvas>
-                </div>
-
-                <!-- Keep your existing Behavioral content here -->
-                <div class="panel">
-                    <p>Your existing behavioral analytics go here.</p>
-                </div>
-            </section>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Mouse</th>
+                        <th>Clicks</th>
+                        <th>Keys</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach (array_slice($logs, 0, 10) as $i => $l): ?>
+                    <tr>
+                        <td><?= $i + 1 ?></td>
+                        <td><?= htmlspecialchars(implode(", ", $l['mouse'])) ?></td>
+                        <td><?= htmlspecialchars(implode(", ", $l['clicks'])) ?></td>
+                        <td><?= htmlspecialchars(implode(", ", $l['keys'])) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
         <?php endif; ?>
     </main>
+</div>
 
-    <!-- Safe PHP → JS data handoff -->
-    <script type="application/json" id="dashboard-data">
-        <?= json_encode(
-            [
-                'activityCounts' => $activityCounts,
-                'navTiming' => $navTiming,
-            ],
-            JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
-        ) ?>
-    </script>
+<script type="application/json" id="dashboard-data">
+<?= json_encode([
+    'activityCounts' => array_values($activityCountsChart),
+    'navTiming' => $navTimingChart
+], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>
+</script>
 
-    <script src="/js/dashboard.js"></script>
+<script src="/js/dashboard.js"></script>
 </body>
 </html>
 </body>
