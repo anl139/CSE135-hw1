@@ -114,28 +114,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.exportPDF = exportPDF;
 });
-function colorWebVitals() {
-  document.querySelectorAll('#performance tbody tr').forEach(row => {
-    const lcp = parseFloat(row.children[1].textContent);
-    const cls = parseFloat(row.children[2].textContent);
-    const inp = parseFloat(row.children[3].textContent);
-
-    if (!isNaN(lcp)) {
-      if (lcp < 2500) row.children[1].style.backgroundColor = 'lightgreen';
-      else if (lcp <= 4000) row.children[1].style.backgroundColor = 'khaki';
-      else row.children[1].style.backgroundColor = 'salmon';
-    }
-
-    if (!isNaN(cls)) {
-      if (cls < 0.1) row.children[2].style.backgroundColor = 'lightgreen';
-      else if (cls <= 0.25) row.children[2].style.backgroundColor = 'khaki';
-      else row.children[2].style.backgroundColor = 'salmon';
-    }
-
-    if (!isNaN(inp)) {
-      if (inp < 200) row.children[3].style.backgroundColor = 'lightgreen';
-      else if (inp <= 500) row.children[3].style.backgroundColor = 'khaki';
-      else row.children[3].style.backgroundColor = 'salmon';
-    }
-  });
-}
