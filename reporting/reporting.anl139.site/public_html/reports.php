@@ -49,11 +49,14 @@ $logs = array_map(function($log) {
         $screen = ($tech['screenWidth'] ?? '-') . "x" . ($tech['screenHeight'] ?? '-');
         $techSummary = "$cores cores, $memory GB, $network, $screen";
     }
-
+    $pagePath = parse_url($data['url'] ?? '', PHP_URL_PATH);
+    if ($pagePath === '' || $pagePath === '/') {
+    $pagePath = '/index.html'; // normalize root URL
+    }
     $perf = [];
     if (isset($data['navTiming'])) {
         $perf = [
-            'page' => $data['page'] ?? (parse_url($data['url'] ?? '', PHP_URL_PATH) ?? 'Unknown'),
+            'page' => $pagePath,
             'lcp' => $vitals['lcp'] ?? null,
             'cls' => $vitals['cls'] ?? null,
             'inp' => $vitals['inp'] ?? null,
