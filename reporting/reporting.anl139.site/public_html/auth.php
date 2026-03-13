@@ -7,7 +7,13 @@ function require_auth() {
     return $_SESSION['user'];}
 function check_access($section) {
     $user = $_SESSION['user'];
-    if ($user['role'] === 'super_admin') return true;
-    if ($user['role'] === 'analyst') {
-        return in_array($section, $user['allowed_sections']);}
+    if ($user['role'] === 'super_admin') {return true;}
+    if ($user['role'] === 'analyst') {return in_array($section, $user['allowed_sections']);}
     return false;}
+function require_admin() {
+    $user = require_auth();
+    if ($user['role'] !== 'super_admin') {
+        http_response_code(403);
+        echo "Access denied";
+        exit;}
+    return $user;}
