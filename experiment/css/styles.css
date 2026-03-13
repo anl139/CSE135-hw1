@@ -1,5 +1,4 @@
 /* ===================== RESET & NORMALIZE ===================== */
-@import url('https://fonts.googleapis.com/css2?family=Comic+Sans+MS&display=swap');
 @import url('normalize.css');
 @import url('reset.css');
 @import url('grid.css');
@@ -10,114 +9,187 @@
 @import url('responsive.css');
 @import url('print.css');
 
-* {
-    margin: 0 !important;
-    padding: 0 !important;
-    box-sizing: border-box !important;
+/* ===================== RESET ===================== */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
 }
 
 body {
-    font-family: 'Comic Sans MS', cursive, sans-serif;
-    background-color: #fff;
-    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==);
-    background-repeat: repeat;
+    margin: 0;
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    background: #ffffff;
+    color: #222;
 }
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+/* ===================== LINKS ===================== */
 
 a {
     color: inherit;
     text-decoration: none;
 }
 
-a:hover { text-decoration: underline; }
-a:visited { color: purple !important; }
-
-input:focus {
-    outline: 10px solid #FFD700;
-    outline-offset: 5px;
+a:hover {
+    text-decoration: underline;
 }
 
-button { cursor: pointer; }
-button:active { transform: scale(0.8); }
+a:visited {
+    color: purple;
+}
 
-h1,h2,h3,h4,h5,h6 { margin: 20px 0 !important; }
+/* ===================== LAYOUT ===================== */
 
 .container {
     max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px !important;
+    margin: auto;
+    padding: 0 20px;
 }
 
 header {
     background: #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.025);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 header .container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px !important;
+    padding: 20px 0;
 }
 
-nav ul { margin: 0 !important; padding: 0 !important; list-style: none; }
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    padding: 0;
+    margin: 0;
+}
+
+/* ===================== HERO ===================== */
+
+.hero {
+    position: relative;
+    overflow: hidden;
+}
+
+.hero img {
+    width: 100%;
+    height: 500px;
+    object-fit: cover;
+}
+
+.hero-content {
+    position: absolute;
+    top: 200px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    background: rgba(0,0,0,0.25);
+    padding: 15px 20px;
+}
+
+.hero-content h1 {
+    color: #FFD700;
+    font-size: 72px;
+    margin: 0;
+}
+
+.hero-content p {
+    color: #ddd;
+    font-size: 24px;
+}
+
+/* ===================== BUTTONS ===================== */
+
+button {
+    cursor: pointer;
+    border: none;
+    padding: 10px 18px;
+    font-size: 14px;
+}
+
+button:active {
+    transform: scale(0.95);
+}
 
 /* ===================== PRODUCT CARDS ===================== */
+
+.product-carousel {
+    padding: 50px 0;
+}
+
+.carousel-container {
+    display: flex;
+    gap: 20px;
+    padding: 0 20px;
+    overflow-x: auto;
+}
+
 .product-card {
-    transition: all 0.3s ease-in-out, transform 0.2s linear, box-shadow 0.4s cubic-bezier(0.4,0,0.2,1);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
 }
 
 .product-card:hover {
-    transform: translateY(-5px) scale(1.02) rotate(0.5deg);
+    transform: translateY(-5px) scale(1.02);
     box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
 
-/* ===================== STRIKETHROUGH / DISCOUNT ===================== */
+.product-card h3 {
+    margin: 10px 0 5px;
+}
+
+.product-card p {
+    margin: 0;
+}
+
+/* ===================== STRIKETHROUGH ===================== */
+
 .strike {
     text-decoration: line-through;
     color: #ccc;
-    font-size: 0.85em;
+    font-size: 0.9em;
     margin-left: 4px;
 }
 
-/* ===================== INPUTS & FORMS ===================== */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-input[type="tel"],
-input[type="url"],
-input[type="search"],
+/* ===================== FORMS ===================== */
+
+input,
 textarea,
 select {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
     border: 1px solid #ddd;
     padding: 10px;
     border-radius: 6px;
+    font-family: inherit;
 }
 
-::selection { background: #FFD700; color: #000; }
-::-moz-selection { background: #FFD700; color: #000; }
-
-html { scroll-behavior: smooth; }
-
-@media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: smooth !important; }
-    * { animation-duration: 10s !important; transition-duration: 1s !important; }
+input:focus,
+textarea:focus,
+select:focus {
+    outline: 3px solid #FFD700;
 }
 
-/* ===================== DARK MODE ===================== */
-[data-theme="dark"] { filter: invert(1); }
-[data-theme="dark"] img, [data-theme="dark"] video { filter: invert(1); }
+/* ===================== NEWSLETTER ===================== */
 
-/* ===================== UTILITY CLASSES ===================== */
+.newsletter {
+    background: #f5f5f5;
+    padding: 40px 0;
+}
+
+/* ===================== UTILITIES ===================== */
+
 .visually-hidden {
     position: absolute;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
+    width: 1px;
+    height: 1px;
     overflow: hidden;
-    clip: rect(0,0,0,0);
 }
 
 .clearfix::after {
@@ -126,30 +198,86 @@ html { scroll-behavior: smooth; }
     clear: both;
 }
 
-/* ===================== KEYFRAMES ===================== */
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+/* ===================== ANIMATIONS ===================== */
 
-/* ===================== TYPOGRAPHY & SPACING ===================== */
-* + * { margin-top: 1.5em; }
-* + h1,* + h2,* + h3,* + h4,* + h5,* + h6 { margin-top: 2em !important; }
-li + li { margin-top: 0.5em; }
-
-/* ===================== MEDIA QUERIES ===================== */
-@media screen and (max-width: 768px) {
-    * { font-size: 16px !important; }
-    body { min-width: 0; }
-    .container { padding: 10px !important; }
-    button { padding: 20px !important; font-size: 20px !important; }
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
-@media screen and (max-width: 480px) {
-    html { font-size: 8px; }
-    * { font-size: inherit !important; }
+@keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+}
+
+/* ===================== DARK MODE ===================== */
+
+[data-theme="dark"] {
+    background: #111;
+    color: #eee;
+}
+
+[data-theme="dark"] header {
+    background: #1a1a1a;
+}
+
+[data-theme="dark"] .newsletter {
+    background: #222;
+}
+
+/* ===================== SELECTION ===================== */
+
+::selection {
+    background: #FFD700;
+    color: #000;
+}
+
+/* ===================== MEDIA QUERIES ===================== */
+
+@media (max-width: 768px) {
+
+    .hero-content h1 {
+        font-size: 42px;
+    }
+
+    .hero-content p {
+        font-size: 18px;
+    }
+
+    .carousel-container {
+        overflow-x: auto;
+    }
+
+    button {
+        padding: 14px 20px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .hero img {
+        height: 350px;
+    }
+
+    .hero-content {
+        top: 120px;
+    }
 }
 
 /* ===================== PRINT ===================== */
+
 @media print {
-    * { background: transparent !important; color: #000 !important; box-shadow: none !important; text-shadow: none !important; }
+    * {
+        background: transparent !important;
+        color: #000 !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
 }
