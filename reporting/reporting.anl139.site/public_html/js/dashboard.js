@@ -1,207 +1,116 @@
-(() => {
-  'use strict';
+document.addEventListener('DOMContentLoaded', () => {
+  const dataEl = document.getElementById('dashboard-data');
+  const dashboardData = dataEl ? JSON.parse(dataEl.textContent || '{}') : {};
 
-  let navChart = null;
-  let activityChart = null;
+  const activityCounts = dashboardData.activityCounts || [];
+  const navTiming = dashboardData.navTiming || [];
 
-  function readDashboardData() {
-    const el = document.getElementById('dashboard-data');
-    if (!el) {
-      return { activityCounts: [], navTiming: [] };
-    }
-
-    try {
-      const parsed = JSON.parse(el.textContent || '{}');
-      return {
-        activityCounts: parsed.activityCounts ?? [],
-        navTiming: parsed.navTiming ?? []
-      };
-    } catch {
-      return { activityCounts: [], navTiming: [] };
-    }
-  }
-
-  // Preserve the PHP-generated variables as JS constants
-  const { activityCounts, navTiming } = readDashboardData();
-
-  function normalizeSeries(input, defaultLabelPrefix) {
-    if (Array.isArray(input)) {
-      if (input.length && typeof input[0] === 'object' && input[0] !== null) {
-        const labels = input.map((item, i) =>
-          item.label ?? item.name ?? item.section ?? `Item ${i + 1}`
-        );
-        const values = input.map((item) =>
-          Number(item.value ?? item.count ?? item.time ?? item.ms ?? 0)
-        );
-        return { labels, values };
-      }
-
-      return {
-        labels: input.map((_, i) => `${defaultLabelPrefix} ${i + 1}`),
-        values: input.map((v) => Number(v) || 0)
-      };
-    }
-
-    if (input && typeof input === 'object') {
-      const labels = Object.keys(input);
-      const values = Object.values(input).map((v) => Number(v) || 0);
-      return { labels, values };
-    }
-
-    return { labels: [], values: [] };
-  }
+  const sidebarLinks = document.querySelectorAll('.sidebar a');
+  const tabs = document.querySelectorAll('.tab-content');
 
   function showTab(tabId) {
-    const tabs = document.querySelectorAll('.tab-content');
-    const buttons = document.querySelectorAll('.tab-button');
-
-    tabs.forEach((tab) => {
-      tab.classList.toggle('active', tab.id === tabId);
+    sidebarLinks.forEach(link => {
+      link.classList.toggle('active', link.dataset.tab === tabId);
     });
 
-    buttons.forEach((button) => {
-      button.classList.toggle('active', button.dataset.tab === tabId);
-    });
-
-    // If the user switches to a chart tab, ensure Chart.js sizes correctly.
-    requestAnimationFrame(() => {
-      if (navChart) navChart.resize();
-      if (activityChart) activityChart.resize();
+    tabs.forEach(tab => {
+      tab.style.display = (tab.id === tabId) ? 'block' : 'none';
     });
   }
 
-  function initCharts() {
-    const navCanvas = document.getElementById('navChart');
-    const activityCanvas = document.getElementById('activityChart');
+  sidebarLinks.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      showTab(link.dataset.tab);
+    });
+  });
 
-    if (navCanvas) {
-      const navSeries = normalizeSeries(navTiming, 'Nav');
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      window.location.href = '/logout.php';
+    });
+  }
 
-      navChart = new Chart(navCanvas, {
-        type: 'line',
-        data: {
-          labels: navSeries.labels,
-          datasets: [{
-            label: 'Navigation Timing',
-            data: navSeries.values,
-            tension: 0.3,
-            fill: false,
-            borderWidth: 2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: true }
-          },
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
-    }
+  function initNavChart() {
+    const canvas = document.getElementById('navChart');
+    if (!canvas) return;
 
-    if (activityCanvas) {
-      const activitySeries = normalizeSeries(activityCounts, 'Activity');
+    new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: navTiming.map((_, i) => 'Log ' + (i + 1)),
+        datasets: [
+          { label: 'DOM Interactive', data: navTiming.map(n => n.domContentLoaded) },
+          { label: 'Total Load', data: navTiming.map(n => n.loadTime) }
+        ]
+      }
+    });
+  }
 
-      activityChart = new Chart(activityCanvas, {
-        type: 'bar',
-        data: {
-          labels: activitySeries.labels,
-          datasets: [{
-            label: 'Activity Counts',
-            data: activitySeries.values,
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: true }
-          },
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
-    }
+  function initActivityChart() {
+    const canvas = document.getElementById('activityChart');
+    if (!canvas) return;
+
+    new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: activityCounts.map((_, i) => 'Log ' + (i + 1)),
+        datasets: [
+          { label: 'Clicks', data: activityCounts.map(a => a.clicks) },
+          { label: 'Scrolls', data: activityCounts.map(a => a.scrolls) },
+          { label: 'MouseMoves', data: activityCounts.map(a => a.mouseMoves) },
+          { label: 'Errors', data: activityCounts.map(a => a.errors) }
+        ]
+      }
+    });
   }
 
   function exportPDF(tabId) {
-    const target = document.getElementById(tabId);
-    if (!target) return;
+    const el = document.getElementById(tabId);
+    if (!el || typeof html2pdf === 'undefined') return;
 
-    const hiddenTabs = Array.from(document.querySelectorAll('.tab-content'))
-      .filter((tab) => tab.id !== tabId);
+    const hiddenTabs = document.querySelectorAll('.tab-content');
+    const previousStates = new Map();
 
-    hiddenTabs.forEach((tab) => {
-      tab.dataset.prevDisplay = tab.style.display;
-      tab.style.display = 'none';
+    hiddenTabs.forEach(tab => {
+      previousStates.set(tab, tab.style.display);
+      if (tab.id !== tabId) {
+        tab.style.display = 'none';
+      }
     });
 
-    const restore = () => {
-      hiddenTabs.forEach((tab) => {
-        tab.style.display = tab.dataset.prevDisplay || '';
-        delete tab.dataset.prevDisplay;
-      });
-    };
-
-    try {
-      if (typeof window.html2pdf !== 'function') {
-        restore();
-        alert('PDF export is not available because html2pdf is not loaded.');
-        return;
-      }
-
-      const options = {
+    html2pdf()
+      .set({
         margin: 0.5,
-        filename: `${tabId}_report.pdf`,
+        filename: tabId + '_report.pdf',
         html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+      })
+      .from(el)
+      .save()
+      .then(() => {
+        hiddenTabs.forEach(tab => {
+          tab.style.display = previousStates.get(tab) || '';
+        });
+      });
+  }
 
-      Promise.resolve(window.html2pdf().set(options).from(target).save())
-        .then(restore)
-        .catch(() => restore());
-    } catch {
-      restore();
-      throw new Error('PDF export failed.');
+  document.querySelectorAll('[data-export-pdf]').forEach(button => {
+    button.addEventListener('click', () => {
+      exportPDF(button.dataset.exportPdf);
+    });
+  });
+
+  if (sidebarLinks.length) {
+    const initial = document.querySelector('.sidebar a.active') || sidebarLinks[0];
+    if (initial) {
+      showTab(initial.dataset.tab);
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.tab-button').forEach((button) => {
-      button.addEventListener('click', () => {
-        showTab(button.dataset.tab);
-      });
-    });
+  initNavChart();
+  initActivityChart();
 
-    document.querySelectorAll('[data-export-pdf]').forEach((button) => {
-      button.addEventListener('click', () => {
-        exportPDF(button.dataset.exportPdf);
-      });
-    });
-
-    // Start on the first available tab if one is already marked active,
-    // otherwise activate the first visible tab.
-    const activeTab = document.querySelector('.tab-content.active');
-    if (activeTab) {
-      showTab(activeTab.id);
-    } else {
-      const firstTab = document.querySelector('.tab-content');
-      if (firstTab) showTab(firstTab.id);
-    }
-
-    initCharts();
-  });
-
-  // Keep exportPDF available globally in case existing markup calls it directly.
   window.exportPDF = exportPDF;
-  window.showTab = showTab;
-})();
+});
