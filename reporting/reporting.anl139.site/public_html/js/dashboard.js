@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+
   const dataEl = document.getElementById('dashboard-data');
   const dashboardData = dataEl ? JSON.parse(dataEl.textContent || '{}') : {};
 
@@ -7,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const sidebarLinks = document.querySelectorAll('.sidebar a');
   const tabs = document.querySelectorAll('.tab-content');
-
   function showTab(tabId) {
     sidebarLinks.forEach(link => {
       link.classList.toggle('active', link.dataset.tab === tabId);
@@ -24,14 +24,13 @@ document.addEventListener('DOMContentLoaded', () => {
       showTab(link.dataset.tab);
     });
   });
-
   const logoutBtn = document.getElementById('logoutBtn');
+
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
       window.location.href = '/logout.php';
     });
   }
-
   function initNavChart() {
     const canvas = document.getElementById('navChart');
     if (!canvas) return;
@@ -39,10 +38,16 @@ document.addEventListener('DOMContentLoaded', () => {
     new Chart(canvas, {
       type: 'bar',
       data: {
-        labels: navTiming.map((_, i) => 'Log ' + (i + 1)),
+        labels: navTiming.map((_, i) => `Log ${i + 1}`),
         datasets: [
-          { label: 'DOM Interactive', data: navTiming.map(n => n.domContentLoaded) },
-          { label: 'Total Load', data: navTiming.map(n => n.loadTime) }
+          {
+            label: 'DOM Interactive',
+            data: navTiming.map(n => n.domContentLoaded)
+          },
+          {
+            label: 'Total Load',
+            data: navTiming.map(n => n.loadTime)
+          }
         ]
       }
     });
@@ -55,58 +60,89 @@ document.addEventListener('DOMContentLoaded', () => {
     new Chart(canvas, {
       type: 'bar',
       data: {
-        labels: activityCounts.map((_, i) => 'Log ' + (i + 1)),
+        labels: activityCounts.map((_, i) => `Log ${i + 1}`),
         datasets: [
-          { label: 'Clicks', data: activityCounts.map(a => a.clicks) },
-          { label: 'MouseMoves', data: activityCounts.map(a => a.mouseMoves) },
-          { label: 'Errors', data: activityCounts.map(a => a.errors) },
-          { label: 'Keys', data: activityCounts.map(a => a.keys)}
+          {
+            label: 'Clicks',
+            data: activityCounts.map(a => a.clicks)
+          },
+          {
+            label: 'MouseMoves',
+            data: activityCounts.map(a => a.mouseMoves)
+          },
+          {
+            label: 'Errors',
+            data: activityCounts.map(a => a.errors)
+          },
+          {
+            label: 'Keys',
+            data: activityCounts.map(a => a.keys)
+          }
         ]
       }
     });
   }
   async function loadPdfLib() {
-  if (window.html2pdf) return;
+    if (window.html2pdf) return;
 
-  const script = document.createElement('script');
-  script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
-  script.defer = true;
+    const script = document.createElement('script');
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+    script.defer = true;
 
-  document.body.appendChild(script);
+    document.body.appendChild(script);
 
-  await new Promise(resolve => {
-    script.onload = resolve;
-  });
-}
-
-  async function exportPDF(tabId) {
-  await loadPdfLib();
-
-  const el = document.getElementById(tabId);
-  if (!el) return;
-
-  const hiddenTabs = document.querySelectorAll('.tab-content');
-  const previousStates = new Map();
-
-  hiddenTabs.forEach(tab => {
-    previousStates.set(tab, tab.style.display);
-    if (tab.id !== tabId) {
-      tab.style.display = 'none';
-    }
-  });
-
-  html2pdf()
-    .set({
-      margin: 0.5,
-      filename: tabId + '_report.pdf',
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-    })
-    .from(el)
-    .save()
-    .then(() => {
-      hiddenTabs.forEach(tab => {
-        tab.style.display = previousStates.get(tab) || '';
-      });
+    await new Promise(resolve => {
+      script.onload = resolve;
     });
-}
+  }
+  async function exportPDF(tabId) {
+
+    await loadPdfLib();
+
+    const el = document.getElementById(tabId);
+    if (!el) return;
+
+    const hiddenTabs = document.querySelectorAll('.tab-content');
+    const previousStates = new Map();
+
+    hiddenTabs.forEach(tab => {
+      previousStates.set(tab, tab.style.display);
+
+      if (tab.id !== tabId) {
+        tab.style.display = 'none';
+      }
+    });
+
+    html2pdf()
+      .set({
+        margin: 0.5,
+        filename: `${tabId}_report.pdf`,
+        html2canvas: { scale: 2 },
+        jsPDF: {
+          unit: 'in',
+          format: 'a4',
+          orientation: 'landscape'
+        }
+      })
+      .from(el)
+      .save()
+      .then(() => {
+        hiddenTabs.forEach(tab => {
+          tab.style.display = previousStates.get(tab) || '';
+        });
+      });
+  }
+
+  document.querySelectorAll('[data-export-pdf]').forEach(button => {
+    button.addEventListener('click', () => {
+      exportPDF(button.dataset.exportPdf);
+    });
+  });
+  if (sidebarLinks.length) {
+    const initial = document.querySelector('.sidebar a.active') || sidebarLinks[0];
+    if (initial) showTab(initial.dataset.tab);
+  }
+  initNavChart();
+  initActivityChart();
+  window.exportPDF = exportPDF;
+});
