@@ -10,20 +10,23 @@
 </head>
 <body>
     <header>
-        <div class="container">
-            <div class="logo">
-                <span style="font-family: 'Comic Sans MS'; font-size: 48px; color: #FFD700; text-shadow: 2px 2px 4px #FF0000;">WT</span>
-            </div>
-            <nav>
-                <ul style="list-style: none; display: flex; gap: 20px;">
-                    <li><a href="index.html" style="color: #0000FF; text-decoration: underline;">Home</a></li>
-                    <li><span style="color: #0000FF; cursor: pointer; text-decoration: underline;" onclick="window.location.href='products.html'">Products</span></li>
-                    <li><a href="product-detail.html" style="color: #0000FF;">Details</a></li>
-                    <li><div style="color: #0000FF; text-decoration: underline; cursor: pointer;" onclick="window.location.href='checkout.html'">Checkout</div></li>
-                </ul>
-            </nav>
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px;">
+        <!-- Logo -->
+        <div class="logo">
+            <span class="logo-text">WT</span>
         </div>
-    </header>
+
+        <!-- Navigation -->
+        <nav>
+            <ul class="nav-list">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="products.html">Products</a></li>
+                <li><a href="product-detail.html">Details</a></li>
+                <li><a href="checkout.html">Checkout</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
     <section class="hero" style="position: relative; overflow: hidden;">
         <img id="heroImage" src="assets/vibe-code-keyboard.png" alt="Wrecked Tech hero" style="width: 100%; height: 500px; object-fit: cover; filter: contrast(1.05) saturate(1.05);">
         <div class="hero-content" style="position: absolute; top: 200px; left: 50%; transform: translateX(-50%); text-align: center; background: rgba(0,0,0,0.25); padding: 12px 18px;">
