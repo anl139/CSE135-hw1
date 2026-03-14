@@ -63,7 +63,6 @@ if ($role === 'viewer') {
 
         $activityCounts = [
             'clicks' => count($activity['clicks'] ?? []),
-            'scrolls' => count($activity['scrolls'] ?? []),
             'mouseMoves' => count($activity['mouseMoves'] ?? []),
             'keys' => count($activity['keys'] ?? []),
             'idleTimes' => count($activity['idleTimes'] ?? []),
@@ -160,7 +159,6 @@ if ($role === 'viewer') {
                         <th>Page</th>
                         <th>Errors</th>
                         <th>Clicks</th>
-                        <th>Scrolls</th>
                         <th>MouseMoves</th>
                         <th>Keys</th>
                         <th>Idle</th>
@@ -175,7 +173,6 @@ if ($role === 'viewer') {
                         <td><?= htmlspecialchars($l['perf']['page'] ?? '-') ?></td>
                         <td><?= htmlspecialchars($l['activityCounts']['errors'] ?? 0) ?></td>
                         <td><?= htmlspecialchars($l['activityCounts']['clicks'] ?? 0) ?></td>
-                        <td><?= htmlspecialchars($l['activityCounts']['scrolls'] ?? 0) ?></td>
                         <td><?= htmlspecialchars($l['activityCounts']['mouseMoves'] ?? 0) ?></td>
                         <td><?= htmlspecialchars($l['activityCounts']['keys'] ?? 0) ?></td>
                         <td><?= htmlspecialchars($l['activityCounts']['idleTimes'] ?? 0) ?></td>
