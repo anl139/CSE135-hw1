@@ -16,17 +16,17 @@
 - **User:** collector_andrew  
 - **Table:** logs
 ### Analytics Login
-= **Super Admin**
+**Super Admin**
 - Username: superadmin
 - Password: superpw
-- **Analyst**
+**Analyst**
 - Username: admin
 - Password: password
 - Username: sam
 - Password: sam123
 - Username: sally
 - Password: sally123
-- **Viewer**
+**Viewer**
 - Username: viewer1
 - Password: viewer123
 
