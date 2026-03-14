@@ -86,7 +86,7 @@ if ($role === 'viewer') {
     $navTimingChart = array_values(array_filter(array_map(fn($l) => $l['perf'], $logs)));
     $totalClicks = array_sum(array_column($activityCountsChart, 'clicks'));
     $totalErrors = array_sum(array_column($activityCountsChart, 'errors'));
-    $totalSessions = count($logs);
+    $totalMouse = array_sum(array_column($activityCountsChart, 'mouseMoves'));
 
     $avgLoad = 0;
     if (!empty($navTimingChart)) {
@@ -222,6 +222,10 @@ if ($role === 'viewer') {
                 <div class="metric">
                     <strong><?= $totalErrors ?></strong>
                     <span>Errors</span>
+                </div>
+                <div class="metric">
+                    <strong><?=$totalMouse $ ?></strong>
+                    <span>Mouse</span>
                 </div>
             </div>
             <canvas id="activityChart"></canvas>
