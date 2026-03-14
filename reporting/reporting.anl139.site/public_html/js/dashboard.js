@@ -82,33 +82,30 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
- function exportPDF(tabId) {
-    // Role and displayName passed from PHP session
-    const role = "<?= $role ?>"; // e.g., 'viewer', 'analyst', 'super_admin'
-    const displayName = "<?= htmlspecialchars($_SESSION['user']['displayName']) ?>";
+function exportPDF(tabId) {
+    const { role, displayName } = window.DASHBOARD_USER || {};
+    if (!role || !displayName) return;
 
     const el = document.getElementById(tabId);
     if (!el) return;
 
-    // Determine if user can add a comment
     const canComment = ['analyst', 'super_admin'].includes(role);
 
-    // Prompt for comment only if allowed
     let commentText = '';
     let commentEl;
+
     if (canComment) {
         while (true) {
             commentText = prompt(
                 "Enter an analyst comment to include in the PDF (max 200 characters):",
                 ""
             );
-            if (commentText === null) break; // user cancelled
+            if (commentText === null) break; // cancelled
             if (commentText.length <= 200) break; // valid
-            alert(`Comment too long! You entered ${commentText.length} characters. Max is 200.`);
+            alert(`Comment too long! Max 200 characters.`);
         }
 
         if (commentText) {
-            // Add temporary comment element at the top of the tab
             commentEl = document.createElement('div');
             commentEl.style.margin = '10px 0';
             commentEl.style.padding = '5px';
@@ -120,7 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Hide other tabs temporarily
     const hiddenTabs = document.querySelectorAll('.tab-content');
     const previousStates = new Map();
     hiddenTabs.forEach(tab => {
@@ -128,7 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tab.id !== tabId) tab.style.display = 'none';
     });
 
-    // Generate PDF
     loadPdfLib().then(() => {
         html2pdf()
             .set({
@@ -140,18 +135,13 @@ document.addEventListener('DOMContentLoaded', () => {
             .from(el)
             .save()
             .then(() => {
-                // Restore previous tab visibility
-                hiddenTabs.forEach(tab => {
-                    tab.style.display = previousStates.get(tab) || '';
-                });
-
-                // Remove temporary comment element
+                hiddenTabs.forEach(tab => tab.style.display = previousStates.get(tab) || '');
                 if (commentEl) el.removeChild(commentEl);
             });
     });
 }
 
-// Attach event listeners
+// Bind all buttons
 document.querySelectorAll('[data-export-pdf]').forEach(button => {
     button.addEventListener('click', () => {
         exportPDF(button.dataset.exportPdf);
