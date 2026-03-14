@@ -138,20 +138,20 @@ if ($role === 'viewer') {
                 <div class="metric">
                     <strong><?= $totalSessions ?></strong>
                     <span>Sessions</span>
-            </div>
-            <div class="metric">
+                </div>
+                <div class="metric">
                     <strong><?= $totalClicks ?></strong>
                     <span>Total Clicks</span>
-            </div>
-            <div class="metric">
-                <strong><?= $totalErrors ?></strong>
-                <span>Errors</span>
-            </div>
+                </div>
+                <div class="metric">
+                    <strong><?= $totalErrors ?></strong>
+                    <span>Errors</span>
+                </div>
                 <div class="metric">
                     <strong><?= number_format($avgLoad,2) ?> ms</strong>
                     <span>Avg Load Time</span>
+                </div>
             </div>
-        </div>
             <table>
                 <thead>
                     <tr>
