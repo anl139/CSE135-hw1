@@ -214,6 +214,16 @@ if ($role === 'viewer') {
             <h2>Behavioral</h2>
             <button type="button" data-export-pdf="behavioral">Export as PDF</button>
             <div class="comments"><?= htmlspecialchars($analystComments['behavioral']) ?></div>
+            <div class="metrics">
+                <div class="metric">
+                    <strong><?= $totalClicks ?></strong>
+                    <span>Total Clicks</span>
+                </div>
+                <div class="metric">
+                    <strong><?= $totalErrors ?></strong>
+                    <span>Errors</span>
+                </div>
+            </div>
             <canvas id="activityChart"></canvas>
             <table>
                 <thead>
