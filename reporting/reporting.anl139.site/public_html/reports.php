@@ -100,16 +100,6 @@ $analystComments = [
     'behavioral' => "User activity summary: clicks, mouse movements, keypresses, and idle times."
 ];
 ?>
-
-$activityCountsChart = array_map(fn($l) => $l['activityCounts'], $logs);
-$navTimingChart = array_values(array_filter(array_map(fn($l) => $l['perf'], $logs)));
-
-$analystComments = [
-    'overview' => "Displays key session activity, errors, and technology per user.",
-    'performance' => "Web Vitals (LCP, CLS, INP) and load times per page.",
-    'behavioral' => "User activity summary: clicks, mouse movements, keypresses, and idle times."
-];
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
