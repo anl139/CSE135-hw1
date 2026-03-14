@@ -2,80 +2,94 @@
 require 'auth.php';
 require_auth();
 
+$allSections = ['overview', 'performance', 'behavioral'];
 $role = $_SESSION['user']['role'] ?? 'viewer';
-$userSections = ['overview', 'performance', 'behavioral']; // all sections exist
-$analystComments = [
-    'overview' => "Displays key session activity, errors, and technology per user.",
-    'performance' => "Web Vitals (LCP, CLS, INP) and load times per page.",
-    'behavioral' => "User activity summary: clicks, mouse movements, keypresses, and idle times."
-];
+$userSections = $_SESSION['user']['allowed_sections'] ?? [];
 
-// --- Load logs based on role ---
-if ($role === 'viewer') {
-    // Viewer: only static saved overview
-    $file = __DIR__ . '/saved_reports/overview.json';
-    if (file_exists($file)) {
-        $logs = json_decode(file_get_contents($file), true) ?? [];
-    } else {
-        $logs = [];
+if ($role === 'super_admin') {
+    $userSections = $allSections;
+} elseif ($role === 'viewer') {
+    $userSections = ['overview'];
+}
+
+$users = load_users();
+$logsRaw = json_decode(file_get_contents("https://reporting.anl139.site/api/logs"), true) ?? [];
+$logsRaw = array_slice($logsRaw, 0, 50);
+
+$logs = array_map(function($log) {
+    $data = json_decode($log['data'] ?? '{}', true) ?? [];
+    $activity = $data['activitySummary'] ?? [];
+    $vitals = $data['vitals'] ?? [];
+    $tech = $data['technographics'] ?? [];
+
+    $sliceData = fn($arr) => array_slice($arr ?? [], 0, 3);
+
+    $clicks = array_map(
+        fn($c) => "({$c['x']},{$c['y']})@" . (!empty($c['t']) ? date('H:i:s', $c['t'] / 1000) : '-'),
+        $sliceData($activity['clicks'] ?? [])
+    );
+
+    $mouse = array_map(
+        fn($m) => "({$m['x']},{$m['y']})@" . (!empty($m['t']) ? date('H:i:s', $m['t'] / 1000) : '-'),
+        $sliceData($activity['mouseMoves'] ?? [])
+    );
+
+    $keys = array_map(
+        fn($k) => ($k['key'] ?? '') . "@" . (!empty($k['t']) ? date('H:i:s', $k['t'] / 1000) : '-'),
+        $sliceData($activity['keys'] ?? [])
+    );
+
+    $errorsActivitySummary = $activity['errors'] ?? [];
+    $errorsActivityData = $data['activityData']['errors'] ?? [];
+    $allErrors = array_merge($errorsActivitySummary, $errorsActivityData);
+
+    $errorsList = array_map(
+        fn($e) => ($e['message'] ?? $e['error']['message'] ?? '-') . "@" . (!empty($e['t']) ? date('H:i:s', $e['t'] / 1000) : '-'),
+        array_slice($allErrors, 0, 3) // only first 3
+    );
+
+    $techSummary = '';
+    if (!empty($tech)) {
+        $cores = $tech['cores'] ?? '-';
+        $memory = $tech['memory'] ?? '-';
+        $network = $tech['network']['effectiveType'] ?? '-';
+        $screen = ($tech['screenWidth'] ?? '-') . "x" . ($tech['screenHeight'] ?? '-');
+        $techSummary = "$cores cores, $memory GB, $network, $screen";
     }
-} else {
-    // Analyst / Super Admin: live logs
-    $logsRaw = json_decode(file_get_contents("https://reporting.anl139.site/api/logs"), true) ?? [];
-    $logsRaw = array_slice($logsRaw, 0, 50);
 
-    $logs = array_map(function($log) {
-        $data = json_decode($log['data'] ?? '{}', true) ?? [];
-        $activity = $data['activitySummary'] ?? [];
-        $vitals = $data['vitals'] ?? [];
-        $tech = $data['technographics'] ?? [];
-
-        $sliceData = fn($arr) => array_slice($arr ?? [], 0, 3);
-
-        $clicks = array_map(fn($c) => "({$c['x']},{$c['y']})@" . (!empty($c['t']) ? date('H:i:s', $c['t']/1000) : '-'), $sliceData($activity['clicks'] ?? []));
-        $mouse = array_map(fn($m) => "({$m['x']},{$m['y']})@" . (!empty($m['t']) ? date('H:i:s', $m['t']/1000) : '-'), $sliceData($activity['mouseMoves'] ?? []));
-        $keys = array_map(fn($k) => ($k['key'] ?? '-') . "@" . (!empty($k['t']) ? date('H:i:s', $k['t']/1000) : '-'), $sliceData($activity['keys'] ?? []));
-        $errorsList = array_map(fn($e) => ($e['message'] ?? '-') . "@" . (!empty($e['t']) ? date('H:i:s', $e['t']/1000) : '-'), array_slice($activity['errors'] ?? [], 0, 3));
-
-        $techSummary = '';
-        if (!empty($tech)) {
-            $cores = $tech['cores'] ?? '-';
-            $memory = $tech['memory'] ?? '-';
-            $network = $tech['network']['effectiveType'] ?? '-';
-            $screen = ($tech['screenWidth'] ?? '-') . "x" . ($tech['screenHeight'] ?? '-');
-            $techSummary = "$cores cores, $memory GB, $network, $screen";
-        }
-
-        $perf = isset($data['navTiming']) ? [
-            'page' => $data['page'] ?? 'Unknown',
+    $perf = [];
+    if (isset($data['navTiming'])) {
+        $perf = [
+            'page' => $data['page'] ?? (parse_url($data['url'] ?? '', PHP_URL_PATH) ?? 'Unknown'),
             'lcp' => $vitals['lcp'] ?? null,
             'cls' => $vitals['cls'] ?? null,
             'inp' => $vitals['inp'] ?? null,
             'domContentLoaded' => $data['navTiming']['domInteractive'] ?? null,
             'loadTime' => $data['navTiming']['totalLoadTime'] ?? null
-        ] : [];
-
-        $activityCounts = [
-            'clicks' => count($activity['clicks'] ?? []),
-            'scrolls' => count($activity['scrolls'] ?? []),
-            'mouseMoves' => count($activity['mouseMoves'] ?? []),
-            'keys' => count($activity['keys'] ?? []),
-            'idleTimes' => count($activity['idleTimes'] ?? []),
-            'errors' => $data['errorCount'] ?? 0
         ];
+    }
 
-        return [
-            'raw' => $log,
-            'clicks' => $clicks,
-            'mouse' => $mouse,
-            'keys' => $keys,
-            'errorsList' => $errorsList,
-            'tech' => $techSummary,
-            'perf' => $perf,
-            'activityCounts' => $activityCounts
-        ];
-    }, $logsRaw);
-}
+    $activityCounts = [
+        'clicks' => count($activity['clicks'] ?? []),
+        'scrolls' => count($activity['scrolls'] ?? []),
+        'mouseMoves' => count($activity['mouseMoves'] ?? []),
+        'keys' => count($activity['keys'] ?? []),
+        'idleTimes' => count($activity['idleTimes'] ?? []),
+        'errors' => $data['errorCount'] ?? 0
+    ];
+
+    return [
+        'raw' => $log,
+        'data' => $data,
+        'clicks' => $clicks,
+        'mouse' => $mouse,
+        'keys' => $keys,
+        'errorsList' => $errorsList, // <-- NEW
+        'tech' => $techSummary,
+        'perf' => $perf,
+        'activityCounts' => $activityCounts
+    ];
+}, $logsRaw);
 
 $activityCountsChart = array_map(fn($l) => $l['activityCounts'], $logs);
 $navTimingChart = array_values(array_filter(array_map(fn($l) => $l['perf'], $logs)));
