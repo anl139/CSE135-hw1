@@ -6,26 +6,31 @@ $allSections = ['overview', 'performance', 'behavioral'];
 $role = $_SESSION['user']['role'] ?? 'viewer';
 
 // Set accessible sections based on role
-$userSections = ($role === 'viewer') ? ['overview'] : $allSections;
+if ($role === 'viewer') {
+    $userSections = ['overview'];
+} else {
+    $userSections = $allSections;
+}
 
-// Analyst comments
 $analystComments = [
     'overview' => "Displays key session activity, errors, and technology per user.",
     'performance' => "Web Vitals (LCP, CLS, INP) and load times per page.",
     'behavioral' => "User activity summary: clicks, mouse movements, keypresses, and idle times."
 ];
 
-// Load logs
+// --- Load logs based on role ---
 if ($role === 'viewer') {
+    // Viewer: load only saved overview
     $file = __DIR__ . '/saved_reports/overview.json';
     $logs = file_exists($file) ? json_decode(file_get_contents($file), true) : [];
     $activityCountsChart = array_map(fn($l) => $l['activityCounts'] ?? [], $logs);
-    $navTimingChart = [];
+    $navTimingChart = []; // viewers don't see performance tab
 } else {
+    // Analyst / Super Admin: fetch live logs
     $logsRaw = json_decode(file_get_contents("https://reporting.anl139.site/api/logs"), true) ?? [];
     $logsRaw = array_slice($logsRaw, 0, 50);
 
-    $logs = array_map(function ($log) {
+    $logs = array_map(function($log) {
         $data = json_decode($log['data'] ?? '{}', true) ?? [];
         $activity = $data['activitySummary'] ?? [];
         $vitals = $data['vitals'] ?? [];
@@ -33,25 +38,10 @@ if ($role === 'viewer') {
 
         $sliceData = fn($arr) => array_slice($arr ?? [], 0, 3);
 
-        $clicks = array_map(
-            fn($c) => "({$c['x']},{$c['y']})@" . (!empty($c['t']) ? date('H:i:s', $c['t'] / 1000) : '-'),
-            $sliceData($activity['clicks'] ?? [])
-        );
-
-        $mouse = array_map(
-            fn($m) => "({$m['x']},{$m['y']})@" . (!empty($m['t']) ? date('H:i:s', $m['t'] / 1000) : '-'),
-            $sliceData($activity['mouseMoves'] ?? [])
-        );
-
-        $keys = array_map(
-            fn($k) => ($k['key'] ?? '-') . "@" . (!empty($k['t']) ? date('H:i:s', $k['t'] / 1000) : '-'),
-            $sliceData($activity['keys'] ?? [])
-        );
-
-        $errorsList = array_map(
-            fn($e) => ($e['message'] ?? $e['error']['message'] ?? '-') . "@" . (!empty($e['t']) ? date('H:i:s', $e['t'] / 1000) : '-'),
-            array_slice(array_merge($activity['errors'] ?? [], $data['activityData']['errors'] ?? []), 0, 3)
-        );
+        $clicks = array_map(fn($c) => "({$c['x']},{$c['y']})@" . (!empty($c['t']) ? date('H:i:s', $c['t']/1000) : '-'), $sliceData($activity['clicks'] ?? []));
+        $mouse = array_map(fn($m) => "({$m['x']},{$m['y']})@" . (!empty($m['t']) ? date('H:i:s', $m['t']/1000) : '-'), $sliceData($activity['mouseMoves'] ?? []));
+        $keys = array_map(fn($k) => ($k['key'] ?? '-') . "@" . (!empty($k['t']) ? date('H:i:s', $k['t']/1000) : '-'), $sliceData($activity['keys'] ?? []));
+        $errorsList = array_map(fn($e) => ($e['message'] ?? $e['error']['message'] ?? '-') . "@" . (!empty($e['t']) ? date('H:i:s', $e['t']/1000) : '-'), array_slice(array_merge($activity['errors'] ?? [], $data['activityData']['errors'] ?? []), 0, 3));
 
         $techSummary = '';
         if (!empty($tech)) {
@@ -100,25 +90,25 @@ if ($role === 'viewer') {
 
     $avgLoad = 0;
     if (!empty($navTimingChart)) {
-        $loadTimes = array_filter(array_column($navTimingChart, 'loadTime'));
-        if (!empty($loadTimes)) {
-            $avgLoad = array_sum($loadTimes) / count($loadTimes);
-        }
+        $loadTimes = array_column($navTimingChart, 'loadTime');
+        $loadTimes = array_filter($loadTimes, fn($v) => $v !== null);
+    if (!empty($loadTimes)) {
+        $avgLoad = array_sum($loadTimes) / count($loadTimes);
     }
+}
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analytics Dashboard</title>
-    <link rel="stylesheet" href="/styles/dashboard.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics Dashboard</title>
+<link rel="stylesheet" href="/styles/dashboard.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <div class="dashboard-layout">
-
     <header class="dashboard-header">
         <h1>Analytics Dashboard</h1>
         <span>User: <?= htmlspecialchars($_SESSION['user']['displayName']) ?> (<?= htmlspecialchars($role) ?>)</span>
@@ -131,94 +121,154 @@ if ($role === 'viewer') {
     <nav class="sidebar">
         <?php foreach ($allSections as $sec): ?>
             <?php if (in_array($sec, $userSections, true)): ?>
-                <a href="#<?= $sec ?>" class="<?= $sec === 'overview' ? 'active' : '' ?>" data-tab="<?= $sec ?>">
-                    <?= ucfirst($sec) ?>
-                </a>
+                <a href="#<?= $sec ?>" class="<?= $sec==='overview'?'active':'' ?>" data-tab="<?= $sec ?>"><?= ucfirst($sec) ?></a>
             <?php endif; ?>
         <?php endforeach; ?>
     </nav>
 
     <main class="main-content">
-        <?php foreach (['overview', 'performance', 'behavioral'] as $tabId):
-            if (!in_array($tabId, $userSections, true)) continue;
-        ?>
-        <div id="<?= $tabId ?>" class="tab-content" style="<?= $tabId !== 'overview' ? 'display:none;' : '' ?>">
-            <h2><?= ucfirst($tabId) ?></h2>
-            <button type="button" data-export-pdf="<?= $tabId ?>">Export as PDF</button>
-            <div class="comments"><?= htmlspecialchars($analystComments[$tabId]) ?></div>
-
-            <?php if ($tabId !== 'performance'): ?>
-                <div class="session-controls">
-                    <label>Sessions:</label>
-                    <select class="sessionFilter">
-                        <option value="10">10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                    </select>
-                    <button class="prevPage" disabled>Previous</button>
-                    <button class="nextPage">Next</button>
-                </div>
-            <?php endif; ?>
-
-            <?php if ($tabId === 'overview'): ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th><th>Session</th><th>Page</th><th>Errors</th><th>Clicks</th>
-                            <th>MouseMoves</th><th>Keys</th><th>Idle</th><th>Technology</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            <?php elseif ($tabId === 'behavioral'): ?>
-                <table>
-                    <thead>
-                        <tr><th>#</th><th>Mouse</th><th>Clicks</th><th>Keys</th><th>Errors</th></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            <?php else: ?>
-                <div class="metrics">
-                    <div class="metric">
-                        <strong><?= number_format($avgLoad, 2) ?> ms</strong>
-                        <span>Avg Load Time</span>
-                    </div>
-                </div>
-                <canvas id="navChart"></canvas>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Page</th><th>LCP</th><th>CLS</th><th>INP</th><th>DOM Interactive</th><th>Total Load Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($navTimingChart as $p): ?>
-                        <tr>
-                            <td><?= $p['page'] ?? '-' ?></td>
-                            <td><?= $p['lcp'] ?? '-' ?></td>
-                            <td><?= $p['cls'] ?? '-' ?></td>
-                            <td><?= $p['inp'] ?? '-' ?></td>
-                            <td><?= $p['domContentLoaded'] ?? '-' ?></td>
-                            <td><?= $p['loadTime'] ?? '-' ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
+        <!-- OVERVIEW -->
+        <?php if (in_array('overview', $userSections, true)): ?>
+        <div id="overview" class="tab-content">
+            <h2>Overview</h2>
+            <button type="button" data-export-pdf="overview">Export as PDF</button>
+            <div class="comments"><?= htmlspecialchars($analystComments['overview']) ?></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Session</th>
+                        <th>Page</th>
+                        <th>Errors</th>
+                        <th>Clicks</th>
+                        <th>MouseMoves</th>
+                        <th>Keys</th>
+                        <th>Idle</th>
+                        <th>Technology</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach (array_slice($logs, 0, 10) as $i => $l): ?>
+                    <tr>
+                        <td><?= $i + 1 ?></td>
+                        <td><?= htmlspecialchars($l['raw']['session_id'] ?? '-') ?></td>
+                        <td><?= htmlspecialchars($l['perf']['page'] ?? '-') ?></td>
+                        <td><?= htmlspecialchars($l['activityCounts']['errors'] ?? 0) ?></td>
+                        <td><?= htmlspecialchars($l['activityCounts']['clicks'] ?? 0) ?></td>
+                        <td><?= htmlspecialchars($l['activityCounts']['mouseMoves'] ?? 0) ?></td>
+                        <td><?= htmlspecialchars($l['activityCounts']['keys'] ?? 0) ?></td>
+                        <td><?= htmlspecialchars($l['activityCounts']['idleTimes'] ?? 0) ?></td>
+                        <td title="<?= htmlspecialchars(json_encode($l['data']['technographics'] ?? [])) ?>">
+                            <?= htmlspecialchars($l['tech']) ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
-        <?php endforeach; ?>
-    </main>
+        <?php endif; ?>
 
+        <!-- PERFORMANCE -->
+        <?php if (in_array('performance', $userSections, true)): ?>
+        <div id="performance" class="tab-content" style="display:none;">
+            <h2>Performance</h2>
+            <button type="button" data-export-pdf="performance">Export as PDF</button>
+            <div class="comments"><?= htmlspecialchars($analystComments['performance']) ?></div>
+            <div class="metrics">
+                <div class="metric">
+                    <strong><?= number_format($avgLoad,2) ?> ms</strong>
+                    <span>Avg Load Time</span>
+                </div>
+            </div>
+            <canvas id="navChart"></canvas>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Page</th>
+                        <th>LCP</th>
+                        <th>CLS</th>
+                        <th>INP</th>
+                        <th>DOM Interactive</th>
+                        <th>Total Load Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($navTimingChart as $p): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($p['page'] ?? '-') ?></td>
+                        <td><?= htmlspecialchars((string)($p['lcp'] ?? '-')) ?></td>
+                        <td><?= htmlspecialchars((string)($p['cls'] ?? '-')) ?></td>
+                        <td><?= htmlspecialchars((string)($p['inp'] ?? '-')) ?></td>
+                        <td><?= htmlspecialchars((string)($p['domContentLoaded'] ?? '-')) ?></td>
+                        <td><?= htmlspecialchars((string)($p['loadTime'] ?? '-')) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
+
+        <!-- BEHAVIORAL -->
+        <?php if (in_array('behavioral', $userSections, true)): ?>
+        <div id="behavioral" class="tab-content" style="display:none;">
+            <h2>Behavioral</h2>
+            <button type="button" data-export-pdf="behavioral">Export as PDF</button>
+            <div class="comments"><?= htmlspecialchars($analystComments['behavioral']) ?></div>
+            <div class="metrics">
+                <div class="metric">
+                    <strong><?= $totalClicks ?></strong>
+                    <span>Total Clicks</span>
+                </div>
+                <div class="metric">
+                    <strong><?= $totalErrors ?></strong>
+                    <span>Errors</span>
+                </div>
+                <div class="metric">
+                    <strong><?= $totalMouse ?></strong>
+                    <span>Mouse</span>
+                </div>
+            </div>
+            <canvas id="activityChart"></canvas>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Mouse</th>
+                        <th>Clicks</th>
+                        <th>Keys</th>
+                        <th>Errors</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach (array_slice($logs, 0, 10) as $i => $l): ?>
+                    <tr>
+                        <td><?= $i + 1 ?></td>
+                        <td><?= htmlspecialchars(implode(", ", $l['mouse'] ?? [])) ?></td>
+                        <td><?= htmlspecialchars(implode(", ", $l['clicks'] ?? [])) ?></td>
+                        <td><?= htmlspecialchars(implode(", ", $l['keys'] ?? [])) ?></td>
+                        <td><?= htmlspecialchars(implode(", ", $l['errorsList'] ?? [])) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
+    </main>
 </div>
 
+<script>
+    window.DASHBOARD_USER = {
+        role: "<?= $role ?>",
+        displayName: "<?= htmlspecialchars($_SESSION['user']['displayName']) ?>"
+    };
+</script>
 <script type="application/json" id="dashboard-data">
 <?= json_encode([
     'activityCounts' => array_values($activityCountsChart),
-    'navTiming' => $navTimingChart,
-    'logs' => $logs // for pagination & table rendering
+    'navTiming' => $navTimingChart
 ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>
 </script>
+
 <script src="/js/dashboard.js"></script>
 </body>
 </html>
-
