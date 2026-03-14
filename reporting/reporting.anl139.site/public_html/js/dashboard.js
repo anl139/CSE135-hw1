@@ -99,8 +99,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById(tabId);
     if (!el) return;
 
-    // Ask for analyst comment first
-    const commentText = prompt("Enter an analyst comment to include in the PDF:", "");
+    // Ask for analyst comment first, with a 200-character limit
+    let commentText = '';
+    while (true) {
+        commentText = prompt("Enter an analyst comment to include in the PDF (max 200 characters):", "");
+        if (commentText === null) break; // user cancelled
+        if (commentText.length <= 200) break; // valid length
+        alert(`Comment too long! You entered ${commentText.length} characters. Max is 200.`);
+    }
 
     let commentEl;
     if (commentText) {
