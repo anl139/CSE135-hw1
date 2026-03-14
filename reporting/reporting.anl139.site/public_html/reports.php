@@ -224,7 +224,7 @@ if ($role === 'viewer') {
                     <span>Errors</span>
                 </div>
                 <div class="metric">
-                    <strong><?=$totalMouse $ ?></strong>
+                    <strong><?= $totalMouse ?></strong>
                     <span>Mouse</span>
                 </div>
             </div>
