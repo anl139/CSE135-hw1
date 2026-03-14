@@ -95,13 +95,13 @@ document.addEventListener('DOMContentLoaded', () => {
       script.onload = resolve;
     });
   }
- async function exportPDF(tabId) {
-    await loadPdfLib();
+ function exportPDF(tabId) {
     const el = document.getElementById(tabId);
     if (!el) return;
 
-    // Prompt user for a comment
+    // Ask for analyst comment first
     const commentText = prompt("Enter an analyst comment to include in the PDF:", "");
+
     let commentEl;
     if (commentText) {
         // Add a temporary comment div at the top of the tab
@@ -126,23 +126,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Export PDF
-    await html2pdf()
-        .set({
-            margin: 0.5,
-            filename: `${tabId}_report.pdf`,
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-        })
-        .from(el)
-        .save();
+    loadPdfLib().then(() => {
+        html2pdf()
+            .set({
+                margin: 0.5,
+                filename: `${tabId}_report.pdf`,
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+            })
+            .from(el)
+            .save()
+            .then(() => {
+                // Restore previous tab states
+                hiddenTabs.forEach(tab => {
+                    tab.style.display = previousStates.get(tab) || '';
+                });
 
-    // Restore previous tab states
-    hiddenTabs.forEach(tab => {
-        tab.style.display = previousStates.get(tab) || '';
+                // Remove the temporary comment element
+                if (commentEl) el.removeChild(commentEl);
+            });
     });
-
-    // Remove the temporary comment element
-    if (commentEl) el.removeChild(commentEl);
 }
 
 // Attach event listeners
