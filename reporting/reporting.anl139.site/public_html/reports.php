@@ -39,6 +39,12 @@ $logs = array_map(function($log) {
         $sliceData($activity['keys'] ?? [])
     );
 
+    // Slice errors too (optional: first 3)
+    $errorsList = array_map(
+        fn($e) => ($e['message'] ?? $e['error']['message'] ?? '-') . "@" . (!empty($e['t']) ? date('H:i:s', $e['t'] / 1000) : '-'),
+        $sliceData($activity['errors'] ?? [])
+    );
+
     $techSummary = '';
     if (!empty($tech)) {
         $cores = $tech['cores'] ?? '-';
@@ -75,6 +81,7 @@ $logs = array_map(function($log) {
         'clicks' => $clicks,
         'mouse' => $mouse,
         'keys' => $keys,
+        'errorsList' => $errorsList, // <-- NEW
         'tech' => $techSummary,
         'perf' => $perf,
         'activityCounts' => $activityCounts
@@ -198,34 +205,36 @@ $analystComments = [
     <?php endif; ?>
 
     <!-- BEHAVIORAL -->
-    <?php if (in_array('behavioral', $userSections, true)): ?>
-    <div id="behavioral" class="tab-content" style="display:none;">
-        <h2>Behavioral</h2>
-        <button type="button" data-export-pdf="behavioral">Export as PDF</button>
-        <div class="comments"><?= htmlspecialchars($analystComments['behavioral']) ?></div>
-        <canvas id="activityChart"></canvas>
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Mouse</th>
-                    <th>Clicks</th>
-                    <th>Keys</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php foreach (array_slice($logs, 0, 10) as $i => $l): ?>
-                <tr>
-                    <td><?= $i + 1 ?></td>
-                    <td><?= htmlspecialchars(implode(", ", $l['mouse'])) ?></td>
-                    <td><?= htmlspecialchars(implode(", ", $l['clicks'])) ?></td>
-                    <td><?= htmlspecialchars(implode(", ", $l['keys'])) ?></td>
-                </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-    <?php endif; ?>
+<?php if (in_array('behavioral', $userSections, true)): ?>
+<div id="behavioral" class="tab-content" style="display:none;">
+    <h2>Behavioral</h2>
+    <button type="button" data-export-pdf="behavioral">Export as PDF</button>
+    <div class="comments"><?= htmlspecialchars($analystComments['behavioral']) ?></div>
+    <canvas id="activityChart"></canvas>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Mouse</th>
+                <th>Clicks</th>
+                <th>Keys</th>
+                <th>Errors</th> <!-- NEW COLUMN -->
+            </tr>
+        </thead>
+        <tbody>
+        <?php foreach (array_slice($logs, 0, 10) as $i => $l): ?>
+            <tr>
+                <td><?= $i + 1 ?></td>
+                <td><?= htmlspecialchars(implode(", ", $l['mouse'])) ?></td>
+                <td><?= htmlspecialchars(implode(", ", $l['clicks'])) ?></td>
+                <td><?= htmlspecialchars(implode(", ", $l['keys'])) ?></td>
+                <td><?= htmlspecialchars(implode(", ", $l['errorsList'] ?? [])) ?></td> <!-- NEW DATA -->
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
+<?php endif; ?>
 
     </main>
 </div>
