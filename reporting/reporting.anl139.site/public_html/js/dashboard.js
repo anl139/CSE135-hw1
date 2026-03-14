@@ -3,10 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const dashboardData = dataEl ? JSON.parse(dataEl.textContent || '{}') : {};
     const activityCounts = dashboardData.activityCounts || [];
     const navTiming = dashboardData.navTiming || [];
-
     const sidebarLinks = document.querySelectorAll('.sidebar a');
     const tabs = document.querySelectorAll('.tab-content');
-
     function showTab(tabId) {
         sidebarLinks.forEach(link => {
             link.classList.toggle('active', link.dataset.tab === tabId);
@@ -15,14 +13,12 @@ document.addEventListener('DOMContentLoaded', () => {
             tab.style.display = (tab.id === tabId) ? 'block' : 'none';
         });
     }
-
     sidebarLinks.forEach(link => {
         link.addEventListener('click', e => {
             e.preventDefault();
             showTab(link.dataset.tab);
         });
     });
-
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) logoutBtn.addEventListener('click', () => window.location.href = '/logout.php');
 
@@ -40,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
     function initActivityChart() {
         const canvas = document.getElementById('activityChart');
         if (!canvas) return;
@@ -57,8 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    // ------------------- PDF Export -------------------
     const { role, displayName } = window.DASHBOARD_USER || {};
     async function loadPdfLib() {
         if (window.html2pdf) return;
@@ -71,15 +64,12 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.appendChild(script);
         });
     }
-
     async function exportPDF(tabId) {
         const el = document.getElementById(tabId);
         if (!el) return;
-
         const canComment = ['analyst', 'super_admin'].includes(role);
         let commentText = '';
         let commentEl;
-
         if (canComment) {
             while (true) {
                 commentText = prompt(
@@ -101,14 +91,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.prepend(commentEl);
             }
         }
-
         const hiddenTabs = document.querySelectorAll('.tab-content');
         const previousStates = new Map();
         hiddenTabs.forEach(tab => {
             previousStates.set(tab, tab.style.display);
             if (tab.id !== tabId) tab.style.display = 'none';
         });
-
         try {
             await loadPdfLib();
             await html2pdf().set({
@@ -124,12 +112,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (commentEl) el.removeChild(commentEl);
         }
     }
-
     document.querySelectorAll('[data-export-pdf]').forEach(button => {
         button.addEventListener('click', () => exportPDF(button.dataset.exportPdf));
     });
-
-    // ------------------- Initial setup -------------------
     if (sidebarLinks.length) {
         const initial = document.querySelector('.sidebar a.active') || sidebarLinks[0];
         if (initial) showTab(initial.dataset.tab);
