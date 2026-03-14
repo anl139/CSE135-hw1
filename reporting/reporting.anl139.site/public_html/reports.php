@@ -87,6 +87,7 @@ if ($role === 'viewer') {
     $totalClicks = array_sum(array_column($activityCountsChart, 'clicks'));
     $totalErrors = array_sum(array_column($activityCountsChart, 'errors'));
     $totalMouse = array_sum(array_column($activityCountsChart, 'mouseMoves'));
+    $totalKey = array_sum(array_column($activityCountsChart, 'keys'));
 
     $avgLoad = 0;
     if (!empty($navTimingChart)) {
@@ -226,6 +227,10 @@ if ($role === 'viewer') {
                 <div class="metric">
                     <strong><?= $totalMouse ?></strong>
                     <span>Mouse</span>
+                </div>
+                <div class="metric">
+                    <strong><?= $totalKey ?></strong>
+                    <span>Total Key Taps</span>
                 </div>
             </div>
             <canvas id="activityChart"></canvas>
