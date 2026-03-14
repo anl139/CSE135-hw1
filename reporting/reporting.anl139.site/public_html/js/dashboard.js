@@ -82,69 +82,83 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-function exportPDF(tabId) {
-    const { role, displayName } = window.DASHBOARD_USER || {};
+const { role, displayName } = window.DASHBOARD_USER || {};
     if (!role || !displayName) return;
 
-    const el = document.getElementById(tabId);
-    if (!el) return;
-
-    const canComment = ['analyst', 'super_admin'].includes(role);
-
-    let commentText = '';
-    let commentEl;
-
-    if (canComment) {
-        while (true) {
-            commentText = prompt(
-                "Enter an analyst comment to include in the PDF (max 200 characters):",
-                ""
-            );
-            if (commentText === null) break; // cancelled
-            if (commentText.length <= 200) break; // valid
-            alert(`Comment too long! Max 200 characters.`);
-        }
-
-        if (commentText) {
-            commentEl = document.createElement('div');
-            commentEl.style.margin = '10px 0';
-            commentEl.style.padding = '5px';
-            commentEl.style.border = '1px solid #000';
-            commentEl.style.background = '#f8f8f8';
-            commentEl.style.fontStyle = 'italic';
-            commentEl.textContent = `Analyst Comment by ${displayName}: ${commentText}`;
-            el.prepend(commentEl);
-        }
+    // Load html2pdf if not loaded
+    async function loadPdfLib() {
+        if (window.html2pdf) return;
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+            script.defer = true;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.body.appendChild(script);
+        });
     }
 
-    const hiddenTabs = document.querySelectorAll('.tab-content');
-    const previousStates = new Map();
-    hiddenTabs.forEach(tab => {
-        previousStates.set(tab, tab.style.display);
-        if (tab.id !== tabId) tab.style.display = 'none';
-    });
+    async function exportPDF(tabId) {
+        const el = document.getElementById(tabId);
+        if (!el) return;
 
-    loadPdfLib().then(() => {
-        html2pdf()
-            .set({
+        const canComment = ['analyst', 'super_admin'].includes(role);
+
+        let commentText = '';
+        let commentEl;
+
+        if (canComment) {
+            while (true) {
+                commentText = prompt(
+                    "Enter an analyst comment to include in the PDF (max 200 characters):",
+                    ""
+                );
+                if (commentText === null) break;
+                if (commentText.length <= 200) break;
+                alert(`Comment too long! Max 200 characters.`);
+            }
+
+            if (commentText) {
+                commentEl = document.createElement('div');
+                commentEl.style.margin = '10px 0';
+                commentEl.style.padding = '5px';
+                commentEl.style.border = '1px solid #000';
+                commentEl.style.background = '#f8f8f8';
+                commentEl.style.fontStyle = 'italic';
+                commentEl.textContent = `Analyst Comment by ${displayName}: ${commentText}`;
+                el.prepend(commentEl);
+            }
+        }
+
+        // Hide other tabs temporarily
+        const hiddenTabs = document.querySelectorAll('.tab-content');
+        const previousStates = new Map();
+        hiddenTabs.forEach(tab => {
+            previousStates.set(tab, tab.style.display);
+            if (tab.id !== tabId) tab.style.display = 'none';
+        });
+
+        // Load PDF library and generate PDF
+        try {
+            await loadPdfLib();
+            await html2pdf().set({
                 margin: 0.5,
                 filename: `${tabId}_report.pdf`,
                 html2canvas: { scale: 2 },
                 jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-            })
-            .from(el)
-            .save()
-            .then(() => {
-                hiddenTabs.forEach(tab => tab.style.display = previousStates.get(tab) || '');
-                if (commentEl) el.removeChild(commentEl);
-            });
-    });
-}
+            }).from(el).save();
+        } catch (err) {
+            console.error("PDF generation failed", err);
+        } finally {
+            // Restore previous tab visibility
+            hiddenTabs.forEach(tab => tab.style.display = previousStates.get(tab) || '');
+            if (commentEl) el.removeChild(commentEl);
+        }
+    }
 
-// Bind all buttons
-document.querySelectorAll('[data-export-pdf]').forEach(button => {
-    button.addEventListener('click', () => {
-        exportPDF(button.dataset.exportPdf);
+    // Bind export buttons
+    document.querySelectorAll('[data-export-pdf]').forEach(button => {
+        button.addEventListener('click', () => exportPDF(button.dataset.exportPdf));
     });
 });
   if (sidebarLinks.length) {
