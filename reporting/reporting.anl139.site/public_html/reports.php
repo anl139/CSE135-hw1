@@ -133,24 +133,6 @@ if ($role === 'viewer') {
             <h2>Overview</h2>
             <button type="button" data-export-pdf="overview">Export as PDF</button>
             <div class="comments"><?= htmlspecialchars($analystComments['overview']) ?></div>
-            <div class="metrics">
-                <div class="metric">
-                    <strong><?= $totalSessions ?></strong>
-                    <span>Sessions</span>
-                </div>
-                <div class="metric">
-                    <strong><?= $totalClicks ?></strong>
-                    <span>Total Clicks</span>
-                </div>
-                <div class="metric">
-                    <strong><?= $totalErrors ?></strong>
-                    <span>Errors</span>
-                </div>
-                <div class="metric">
-                    <strong><?= number_format($avgLoad,2) ?> ms</strong>
-                    <span>Avg Load Time</span>
-                </div>
-            </div>
             <table>
                 <thead>
                     <tr>
@@ -192,6 +174,12 @@ if ($role === 'viewer') {
             <h2>Performance</h2>
             <button type="button" data-export-pdf="performance">Export as PDF</button>
             <div class="comments"><?= htmlspecialchars($analystComments['performance']) ?></div>
+            <div class="metrics">
+                <div class="metric">
+                    <strong><?= number_format($avgLoad,2) ?> ms</strong>
+                    <span>Avg Load Time</span>
+                </div>
+            </div>
             <canvas id="navChart"></canvas>
             <table>
                 <thead>
