@@ -46,6 +46,7 @@ function ensure_user_store(): void {
             json_encode(default_users(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
             LOCK_EX
         );
+        chmod(USERS_FILE, 0600);
     }
 }
 
