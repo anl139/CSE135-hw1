@@ -51,8 +51,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <button type="submit">Login</button>
         </form>
-
-        <p class="hint">Super admin: <strong>superadmin / superpw</strong></p>
     </div>
 </body>
 </html>
