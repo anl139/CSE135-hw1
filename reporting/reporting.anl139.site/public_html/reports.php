@@ -39,10 +39,13 @@ $logs = array_map(function($log) {
         $sliceData($activity['keys'] ?? [])
     );
 
-    // Slice errors too (optional: first 3)
+    $errorsActivitySummary = $activity['errors'] ?? [];
+    $errorsActivityData = $data['activityData']['errors'] ?? [];
+    $allErrors = array_merge($errorsActivitySummary, $errorsActivityData);
+
     $errorsList = array_map(
         fn($e) => ($e['message'] ?? $e['error']['message'] ?? '-') . "@" . (!empty($e['t']) ? date('H:i:s', $e['t'] / 1000) : '-'),
-        $sliceData($activity['errors'] ?? [])
+        array_slice($allErrors, 0, 3) // only first 3
     );
 
     $techSummary = '';
