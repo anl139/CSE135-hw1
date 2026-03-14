@@ -2,70 +2,26 @@
 ## Team
 - **Andrew Lam**
 ---
-## Server & Credentials
-**Server IP:** `167.172.120.163`
-### Grader Account
-- **Username:** grader  
-- **Password:** anl160
-
-### User Account
-- **Username:** andrew  
-- **Password:** Anny2001
-
-### Database Login
-- **DB Name:** collector_db  
-- **User:** collector_andrew  
-- **Table:** logs
-
 ---
 
 ## Website
-- [https://anl139.site/](https://anl139.site/)
+- [https://anl139.site/](https://anl139.site)
+- [https://collector.anl139.site/](https://collector.anl139.site/)
+- [https://test.anl139.site/](https://test.anl139.site/)
+- [https://reporting.anl139.site/](https://reporting.anl139.site/)
+- [https://reporting.anl139.site/login](https://reporting.anl139.site/login)
+- [https://github.com/anl139/CSE135-hw1](https://github.com/anl139/CSE135-hw1)
 
 ---
 
-## Database Table: `logs`
+## Usage of AI
+- I had used AI for these assignments being to create the CSS for the file and often to troubleshoot errors within my code. I am not the very best at writing HTML or the best practices so often I would consult LLM for these best practices and how to implmement them.
+- Typically when there was a major bug and didnt have time to resolve it I would use an LLM implementation to fix it should it actually work
+- The value of using it in this way allowed me to save on time and expand on what I originally had implemented but I am aware of the technical debt I am facing if I continue to go down this path
 
-| Column      | Type     | Description                              |
-|------------ |--------- |-----------------------------------------|
-| id          | SERIAL   | Auto-incrementing primary key            |
-| session_id  | VARCHAR  | Unique session identifier                |
-| log_type    | VARCHAR  | Type of log (pageview, page-exit, activity) |
-| timestamp   | TIMESTAMP| When the event occurred                  |
-| data        | JSON     | Full JSON object of event data           |
-
-### Sample Entries
-
-| id | session_id          | log_type   | timestamp           | data |
-|----|------------------- |----------- |------------------- |------|
-| 8  | testPOST            | pageview   | 2026-02-26 05:33:50 | `{"data":{"page":"home"},"type":"pageview","sessionId":"testPOST","timestamp":"2026-02-25T06:00:00Z"}` |
-| 6  | go8xidac28omm1mh267 | page-exit | 2026-02-25 06:16:56 | `{"data":{"page":"about"},"type":"page-exit","sessionId":"testPOST","timestamp":"2026-02-25T06:05:00Z"}` |
-
----
-
-## API Endpoints
-
-| HTTP Method | Route             | Description                        |
-|------------ |----------------- |---------------------------------- |
-| GET         | /api/logs         | Retrieve all log entries           |
-| GET         | /api/logs/{id}    | Retrieve a specific log entry by ID |
-| POST        | /api/logs         | Create a new log entry             |
-| PUT         | /api/logs/{id}    | Update an existing log entry by ID |
-| DELETE      | /api/logs/{id}    | Delete a log entry by ID           |
-
-**Notes:**  
-- All requests and responses use JSON.
-
----
-
-### Example POST/PUT Payload
-
-```json
-{
-  "type": "pageview",
-  "sessionId": "testPOST",
-  "timestamp": "2026-02-25T06:00:00Z",
-  "data": {"page": "home"}
-}
+## Future Implementations
+- Should I have more time of this I would have on the reporting site, enabled a way to view all 50 records by ten each in which they could have filtered using the respective columns. perhaps created a seperate heatmap table the mouse and scroll usage to determine where on the monitor where they actually clicking as typically the data is represented in coordinates.
+- I would have attempted to improve the testing page since i notice that its load times are very high and felt that it could be improved should i take the time and improve
+- but more likely then not i would had just churned it to an LLM
 
 
