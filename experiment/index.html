@@ -79,7 +79,6 @@
             </div>
         </div>
     </section>
-
     <section class="newsletter" style="background: #f5f5f5; padding: 40px 0;">
         <div style="max-width: 600px; margin: 0 auto; text-align: center;">
             <h2>Get Broken Deals!</h2>
@@ -90,10 +89,8 @@
             </form>
         </div>
     </section>
-
     <div class="rage-click-area" style="position: fixed; bottom: 20px; right: 20px; width: 100px; height: 100px; background: transparent;">
     </div>
-
     <footer style="background: #000; color: #fff; padding: 40px 0; margin-top: 50px;">
         <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; padding: 0 20px;">
             <div>
@@ -109,7 +106,6 @@
             </div>
         </div>
     </footer>
-
     <script>
         var heroImages = [
             'assets/vibe-code-keyboard.png',
@@ -126,24 +122,20 @@
             heroIndex = (heroIndex + 1) % heroImages.length;
             heroImageEl.src = heroImages[heroIndex];
         }, 7000);
-
         var images = document.querySelectorAll('img[data-src]');
         images.forEach(function(img) {
             setTimeout(function() {
                 img.src = img.dataset.src;
             }, 350 + (Math.random() * 700));
         });
-
         function submitNewsletter(e) {
             e.preventDefault();
             alert('Thanks for subscribing!');
             console.log(nonExistentVariable);
         }
-
         document.querySelector('.rage-click-area').addEventListener('click', function() {
             console.log('Click detected');
         });
-
         var products = document.querySelectorAll('.product-card');
         products.forEach(function(card) {
             card.addEventListener('click', function() {
@@ -154,4 +146,3 @@
     <script src="js/wreckage-upgrade.js"></script>
 </body>
 </html>
-
