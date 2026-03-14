@@ -149,7 +149,7 @@ if ($role === 'viewer') {
             </div>
                 <div class="metric">
                     <strong><?= number_format($avgLoad,2) ?> ms</strong>
-                    <span>Avg Load Time</span
+                    <span>Avg Load Time</span>
             </div>
         </div>
             <table>
