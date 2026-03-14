@@ -1,0 +1,129 @@
+[
+  {
+    "raw": {
+      "session_id": "sess_001",
+      "user": "John Doe"
+    },
+    "data": {
+      "page": "/home",
+      "technographics": {
+        "cores": 4,
+        "memory": 16,
+        "network": { "effectiveType": "4g" },
+        "screenWidth": 1920,
+        "screenHeight": 1080
+      },
+      "navTiming": {
+        "domInteractive": 1200,
+        "totalLoadTime": 2500
+      },
+      "activitySummary": {
+        "clicks": [
+          {"x": 100, "y": 200, "t": 1678812345000},
+          {"x": 150, "y": 220, "t": 1678812348000}
+        ],
+        "mouseMoves": [
+          {"x": 50, "y": 60, "t": 1678812344000},
+          {"x": 70, "y": 80, "t": 1678812346000}
+        ],
+        "keys": [
+          {"key": "a", "t": 1678812347000},
+          {"key": "b", "t": 1678812349000}
+        ],
+        "scrolls": [100, 200],
+        "idleTimes": [5000],
+        "errors": [
+          {"message": "JS Error: Something went wrong", "t": 1678812350000}
+        ]
+      },
+      "errorCount": 1,
+      "vitals": {
+        "lcp": 1500,
+        "cls": 0.02,
+        "inp": 120
+      }
+    },
+    "clicks": ["(100,200)@11:12:25", "(150,220)@11:12:28"],
+    "mouse": ["(50,60)@11:12:24", "(70,80)@11:12:26"],
+    "keys": ["a@11:12:27", "b@11:12:29"],
+    "errorsList": ["JS Error: Something went wrong@11:12:30"],
+    "tech": "4 cores, 16 GB, 4g, 1920x1080",
+    "perf": {
+      "page": "/home",
+      "lcp": 1500,
+      "cls": 0.02,
+      "inp": 120,
+      "domContentLoaded": 1200,
+      "loadTime": 2500
+    },
+    "activityCounts": {
+      "clicks": 2,
+      "scrolls": 2,
+      "mouseMoves": 2,
+      "keys": 2,
+      "idleTimes": 1,
+      "errors": 1
+    }
+  },
+  {
+    "raw": {
+      "session_id": "sess_002",
+      "user": "Jane Smith"
+    },
+    "data": {
+      "page": "/product",
+      "technographics": {
+        "cores": 8,
+        "memory": 32,
+        "network": { "effectiveType": "wifi" },
+        "screenWidth": 2560,
+        "screenHeight": 1440
+      },
+      "navTiming": {
+        "domInteractive": 900,
+        "totalLoadTime": 1800
+      },
+      "activitySummary": {
+        "clicks": [
+          {"x": 200, "y": 300, "t": 1678812365000}
+        ],
+        "mouseMoves": [
+          {"x": 120, "y": 140, "t": 1678812364000}
+        ],
+        "keys": [
+          {"key": "Enter", "t": 1678812366000}
+        ],
+        "scrolls": [150],
+        "idleTimes": [3000],
+        "errors": []
+      },
+      "errorCount": 0,
+      "vitals": {
+        "lcp": 1200,
+        "cls": 0.01,
+        "inp": 100
+      }
+    },
+    "clicks": ["(200,300)@11:12:45"],
+    "mouse": ["(120,140)@11:12:44"],
+    "keys": ["Enter@11:12:46"],
+    "errorsList": [],
+    "tech": "8 cores, 32 GB, wifi, 2560x1440",
+    "perf": {
+      "page": "/product",
+      "lcp": 1200,
+      "cls": 0.01,
+      "inp": 100,
+      "domContentLoaded": 900,
+      "loadTime": 1800
+    },
+    "activityCounts": {
+      "clicks": 1,
+      "scrolls": 1,
+      "mouseMoves": 1,
+      "keys": 1,
+      "idleTimes": 1,
+      "errors": 0
+    }
+  }
+]
