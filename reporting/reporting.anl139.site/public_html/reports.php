@@ -85,6 +85,18 @@ if ($role === 'viewer') {
 
     $activityCountsChart = array_map(fn($l) => $l['activityCounts'], $logs);
     $navTimingChart = array_values(array_filter(array_map(fn($l) => $l['perf'], $logs)));
+    $totalClicks = array_sum(array_column($activityCountsChart, 'clicks'));
+    $totalErrors = array_sum(array_column($activityCountsChart, 'errors'));
+    $totalSessions = count($logs);
+
+    $avgLoad = 0;
+    if (!empty($navTimingChart)) {
+        $loadTimes = array_column($navTimingChart, 'loadTime');
+        $loadTimes = array_filter($loadTimes, fn($v) => $v !== null);
+    if (!empty($loadTimes)) {
+        $avgLoad = array_sum($loadTimes) / count($loadTimes);
+    }
+}
 }
 ?>
 <!DOCTYPE html>
@@ -122,6 +134,24 @@ if ($role === 'viewer') {
             <h2>Overview</h2>
             <button type="button" data-export-pdf="overview">Export as PDF</button>
             <div class="comments"><?= htmlspecialchars($analystComments['overview']) ?></div>
+            <div class="metrics">
+                <div class="metric">
+                    <strong><?= $totalSessions ?></strong>
+                    <span>Sessions</span>
+            </div>
+            <div class="metric">
+                    <strong><?= $totalClicks ?></strong>
+                    <span>Total Clicks</span>
+            </div>
+            <div class="metric">
+                <strong><?= $totalErrors ?></strong>
+                <span>Errors</span>
+            </div>
+                <div class="metric">
+                    <strong><?= number_format($avgLoad,2) ?> ms</strong>
+                    <span>Avg Load Time</span
+            </div>
+        </div>
             <table>
                 <thead>
                     <tr>
