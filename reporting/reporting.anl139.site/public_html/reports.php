@@ -211,12 +211,12 @@ if ($role === 'viewer') {
 
 </div>
 
-<script>
-    window.DASHBOARD_USER = {
-        role: "<?= $role ?>",
-        displayName: "<?= htmlspecialchars($_SESSION['user']['displayName']) ?>"
-    };
-    const rawData = <?= json_encode($logs, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_AMP|JSON_HEX_QUOT) ?>;
+<script type="application/json" id="dashboard-data">
+<?= json_encode([
+    'activityCounts' => array_values($activityCountsChart),
+    'navTiming' => $navTimingChart,
+    'logs' => $logs // for pagination & table rendering
+], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>
 </script>
 <script src="/js/dashboard.js"></script>
 </body>
