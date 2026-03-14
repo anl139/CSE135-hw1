@@ -241,7 +241,12 @@ $analystComments = [
 
     </main>
 </div>
-
+<script>
+    window.DASHBOARD_USER = {
+        role: "<?= $role ?>",
+        displayName: "<?= htmlspecialchars($_SESSION['user']['displayName']) ?>"
+    };
+</script>
 <script type="application/json" id="dashboard-data">
 <?= json_encode([
     'activityCounts' => array_values($activityCountsChart),
