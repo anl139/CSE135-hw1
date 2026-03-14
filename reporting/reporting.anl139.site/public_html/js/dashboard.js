@@ -82,43 +82,42 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-  async function loadPdfLib() {
-    if (window.html2pdf) return;
-
-    const script = document.createElement('script');
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
-    script.defer = true;
-
-    document.body.appendChild(script);
-
-    await new Promise(resolve => {
-      script.onload = resolve;
-    });
-  }
  function exportPDF(tabId) {
+    // Role and displayName passed from PHP session
+    const role = "<?= $role ?>"; // e.g., 'viewer', 'analyst', 'super_admin'
+    const displayName = "<?= htmlspecialchars($_SESSION['user']['displayName']) ?>";
+
     const el = document.getElementById(tabId);
     if (!el) return;
 
-    // Ask for analyst comment first, with a 200-character limit
-    let commentText = '';
-    while (true) {
-        commentText = prompt("Enter an analyst comment to include in the PDF (max 200 characters):", "");
-        if (commentText === null) break; // user cancelled
-        if (commentText.length <= 200) break; // valid length
-        alert(`Comment too long! You entered ${commentText.length} characters. Max is 200.`);
-    }
+    // Determine if user can add a comment
+    const canComment = ['analyst', 'super_admin'].includes(role);
 
+    // Prompt for comment only if allowed
+    let commentText = '';
     let commentEl;
-    if (commentText) {
-        // Add a temporary comment div at the top of the tab
-        commentEl = document.createElement('div');
-        commentEl.style.margin = '10px 0';
-        commentEl.style.padding = '5px';
-        commentEl.style.border = '1px solid #000';
-        commentEl.style.background = '#f8f8f8';
-        commentEl.style.fontStyle = 'italic';
-        commentEl.textContent = `Analyst Comment: ${commentText}`;
-        el.prepend(commentEl);
+    if (canComment) {
+        while (true) {
+            commentText = prompt(
+                "Enter an analyst comment to include in the PDF (max 200 characters):",
+                ""
+            );
+            if (commentText === null) break; // user cancelled
+            if (commentText.length <= 200) break; // valid
+            alert(`Comment too long! You entered ${commentText.length} characters. Max is 200.`);
+        }
+
+        if (commentText) {
+            // Add temporary comment element at the top of the tab
+            commentEl = document.createElement('div');
+            commentEl.style.margin = '10px 0';
+            commentEl.style.padding = '5px';
+            commentEl.style.border = '1px solid #000';
+            commentEl.style.background = '#f8f8f8';
+            commentEl.style.fontStyle = 'italic';
+            commentEl.textContent = `Analyst Comment by ${displayName}: ${commentText}`;
+            el.prepend(commentEl);
+        }
     }
 
     // Hide other tabs temporarily
@@ -126,12 +125,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const previousStates = new Map();
     hiddenTabs.forEach(tab => {
         previousStates.set(tab, tab.style.display);
-        if (tab.id !== tabId) {
-            tab.style.display = 'none';
-        }
+        if (tab.id !== tabId) tab.style.display = 'none';
     });
 
-    // Export PDF
+    // Generate PDF
     loadPdfLib().then(() => {
         html2pdf()
             .set({
@@ -143,12 +140,12 @@ document.addEventListener('DOMContentLoaded', () => {
             .from(el)
             .save()
             .then(() => {
-                // Restore previous tab states
+                // Restore previous tab visibility
                 hiddenTabs.forEach(tab => {
                     tab.style.display = previousStates.get(tab) || '';
                 });
 
-                // Remove the temporary comment element
+                // Remove temporary comment element
                 if (commentEl) el.removeChild(commentEl);
             });
     });
